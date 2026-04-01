@@ -1,0 +1,491 @@
+diff --git a/e:\jiyasstudio\jijasstudio-frontend\src\pages\Gallery.jsx b/e:\jiyasstudio\jijasstudio-frontend\src\pages\Gallery.jsx
+deleted file mode 100644
+--- a/e:\jiyasstudio\jijasstudio-frontend\src\pages\Gallery.jsx
++++ /dev/null
+@@ -1,486 +0,0 @@
+-import React, { useEffect, useMemo, useState } from 'react';
+-import { AnimatePresence, motion as Motion } from 'framer-motion';
+-import { Aperture, ArrowUpRight, Play, Sparkles, X } from 'lucide-react';
+-
+-const imageGlob = import.meta.glob('../assets/images/*.{png,jpg,jpeg,webp}', { eager: true });
+-const videoGlob = import.meta.glob('../assets/videos/*.{mp4,MP4}', { eager: true });
+-
+-const categories = ['All', 'Bridal', 'Hair', 'Skin', 'Studio'];
+-
+-const getCategoryFromPath = (path) => {
+-  const filePath = path.toLowerCase();
+-
+-  if (filePath.includes('bridal') || filePath.includes('makeup')) return 'Bridal';
+-  if (filePath.includes('hair') || filePath.includes('cut')) return 'Hair';
+-  if (filePath.includes('skin') || filePath.includes('glow')) return 'Skin';
+-  return 'Studio';
+-};
+-
+-const getTitleFromPath = (path) =>
+-  path
+-    .split('/')
+-    .pop()
+-    .split('.')[0]
+-    .replace(/[_-]/g, ' ')
+-    .replace(/\b\w/g, (char) => char.toUpperCase());
+-
+-const getMoodCopy = (category, type) => {
+-  const moodByCategory = {
+-    Bridal: 'Soft radiance, precision glam, and ceremony-ready finishing touches.',
+-    Hair: 'Shape, movement, and polished texture built around your face and mood.',
+-    Skin: 'Glow-focused care designed for clarity, calm, and visible freshness.',
+-    Studio: 'Signature interiors, consultation moments, and transformation energy.',
+-  };
+-
+-  return `${moodByCategory[category]} ${type === 'video' ? 'Watch the motion and pacing.' : 'Pause on the detail work.'}`;
+-};
+-
+-const imageItems = Object.entries(imageGlob)
+-  .map(([path, module]) => ({
+-    id: path,
+-    src: module.default,
+-    title: getTitleFromPath(path),
+-    category: getCategoryFromPath(path),
+-    type: 'image',
+-  }))
+-  .slice(0, 16);
+-
+-const videoItems = Object.entries(videoGlob)
+-  .map(([path, module]) => ({
+-    id: path,
+-    src: module.default,
+-    title: getTitleFromPath(path),
+-    category: getCategoryFromPath(path),
+-    type: 'video',
+-  }))
+-  .slice(0, 8);
+-
+-const fallbackImageByCategory = imageItems.reduce((accumulator, item) => {
+-  if (!accumulator[item.category]) accumulator[item.category] = item.src;
+-  return accumulator;
+-}, {});
+-
+-const interleaveMedia = (primaryItems, secondaryItems) => {
+-  const mixed = [];
+-  const maxLength = Math.max(primaryItems.length, secondaryItems.length);
+-
+-  for (let index = 0; index < maxLength; index += 1) {
+-    if (primaryItems[index]) mixed.push(primaryItems[index]);
+-    if (secondaryItems[index]) mixed.push(secondaryItems[index]);
+-  }
+-
+-  return mixed;
+-};
+-
+-const mediaItems = interleaveMedia(imageItems, videoItems).map((item, index) => {
+-  const posterSrc =
+-    item.type === 'image'
+-      ? item.src
+-      : fallbackImageByCategory[item.category] ?? imageItems[0]?.src ?? '';
+-
+-  return {
+-    ...item,
+-    posterSrc,
+-    indexLabel: String(index + 1).padStart(2, '0'),
+-    description: getMoodCopy(item.category, item.type),
+-  };
+-});
+-
+-const categoryNotes = {
+-  All: 'A full visual pass through the studio atmosphere, styling work, and bridal moments.',
+-  Bridal: 'Refined bridal work built around balance, softness, and camera-ready finish.',
+-  Hair: 'Cuts, styling, and shape work that focus on structure, shine, and movement.',
+-  Skin: 'Treatment moments and finish shots centered on glow and confidence.',
+-  Studio: "The room, the ritual, and the feeling clients step into at Jiya's Studio.",
+-};
+-
+-const editorialStatements = [
+-  { kicker: 'Luxury Bridal', value: '01', copy: 'Richer gold accents, softer mood, and ceremony-first storytelling.' },
+-  { kicker: 'Minimal Modern', value: '02', copy: 'Cleaner spacing and fewer distractions so every frame feels premium.' },
+-  { kicker: 'Fashion Magazine', value: '03', copy: 'Sharper typography, bolder cover-style composition, and stronger presence.' },
+-];
+-
+-const GalleryMedia = ({ item, className = '', priority = false, allowVideo = true }) => {
+-  const [videoFailed, setVideoFailed] = useState(false);
+-  const prefersImage = item.type === 'image' || videoFailed || !allowVideo;
+-  const imageSrc = item.type === 'image' ? item.src : item.posterSrc;
+-
+-  if (prefersImage) {
+-    return (
+-      <img
+-        src={imageSrc}
+-        alt={item.title}
+-        loading={priority ? 'eager' : 'lazy'}
+-        className={className}
+-      />
+-    );
+-  }
+-
+-  return (
+-    <video
+-      src={item.src}
+-      poster={item.posterSrc}
+-      className={className}
+-      muted
+-      loop
+-      autoPlay
+-      playsInline
+-      preload="metadata"
+-      onError={() => setVideoFailed(true)}
+-    />
+-  );
+-};
+-
+-const Gallery = () => {
+-  const [activeCategory, setActiveCategory] = useState('All');
+-  const [activeItemId, setActiveItemId] = useState(imageItems[0]?.id ?? mediaItems[0]?.id ?? null);
+-  const [lightboxItem, setLightboxItem] = useState(null);
+-
+-  const filteredItems = useMemo(() => {
+-    if (activeCategory === 'All') return mediaItems;
+-    return mediaItems.filter((item) => item.category === activeCategory);
+-  }, [activeCategory]);
+-
+-  const featuredItem = useMemo(
+-    () =>
+-      filteredItems.find((item) => item.id === activeItemId) ??
+-      filteredItems.find((item) => item.type === 'image') ??
+-      filteredItems[0] ??
+-      null,
+-    [activeItemId, filteredItems]
+-  );
+-
+-  const visibleShelf = useMemo(() => {
+-    const imageFirst = [
+-      ...filteredItems.filter((item) => item.type === 'image'),
+-      ...filteredItems.filter((item) => item.type === 'video'),
+-    ];
+-    return imageFirst.slice(0, 6);
+-  }, [filteredItems]);
+-
+-  const marqueeBaseItems = useMemo(() => {
+-    const imageFirst = filteredItems.filter((item) => item.type === 'image');
+-    return imageFirst.length ? imageFirst : filteredItems;
+-  }, [filteredItems]);
+-
+-  const marqueeItems = useMemo(() => [...marqueeBaseItems, ...marqueeBaseItems], [marqueeBaseItems]);
+-
+-  const categoryStats = useMemo(
+-    () =>
+-      categories
+-        .filter((category) => category !== 'All')
+-        .map((category) => ({
+-          category,
+-          count: mediaItems.filter((item) => item.category === category).length,
+-        })),
+-    []
+-  );
+-
+-  useEffect(() => {
+-    if (!featuredItem && filteredItems[0]) {
+-      setActiveItemId(filteredItems[0].id);
+-      return;
+-    }
+-
+-    if (featuredItem && featuredItem.id !== activeItemId) {
+-      setActiveItemId(featuredItem.id);
+-    }
+-  }, [activeItemId, featuredItem, filteredItems]);
+-
+-  useEffect(() => {
+-    document.body.style.overflow = lightboxItem ? 'hidden' : '';
+-    return () => {
+-      document.body.style.overflow = '';
+-    };
+-  }, [lightboxItem]);
+-
+-  return (
+-    <Motion.main
+-      initial={{ opacity: 0, y: 18 }}
+-      animate={{ opacity: 1, y: 0 }}
+-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+-      className="page-shell relative min-h-screen overflow-hidden px-4 pb-20 pt-26 sm:px-[5%] md:pb-28 md:pt-34"
+-    >
+-      <div className="pointer-events-none absolute inset-0 opacity-90">
+-        <div className="absolute left-[-8%] top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(214,177,111,0.2),transparent_65%)] blur-3xl" />
+-        <div className="absolute right-[-10%] top-[28rem] h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_68%)] blur-3xl" />
+-      </div>
+-
+-      <section className="relative mx-auto max-w-7xl">
+-        <div className="grid gap-8 xl:grid-cols-[1.02fr_0.98fr] xl:items-end">
+-          <div className="space-y-6 md:space-y-8">
+-            <div className="section-label">
+-              <Aperture className="h-4 w-4" />
+-              Couture Gallery
+-            </div>
+-
+-            <div className="max-w-3xl">
+-              <p className="text-[0.68rem] uppercase tracking-[0.38em] text-accent/80 md:text-[0.72rem]">Bridal Journal 2026</p>
+-              <h1 className="mt-4 font-heading text-[3.2rem] leading-[0.88] tracking-[-0.05em] text-white sm:text-[4.3rem] md:text-[5.4rem] xl:text-[7rem]">
+-                Bridal luxury,
+-                <span className="block pl-0 italic text-accent sm:pl-6 md:pl-10 xl:pl-16">cut with modern restraint.</span>
+-              </h1>
+-              <p className="mt-5 max-w-2xl text-sm leading-7 text-[#e7dece]/75 sm:text-base md:text-lg md:leading-8">
+-                The gallery now feels closer to a premium bridal lookbook: less visual noise, more breathing room, and a sharper
+-                editorial focus on makeup, hair, glow, and studio atmosphere.
+-              </p>
+-            </div>
+-
+-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+-              {editorialStatements.map((statement) => (
+-                <div key={statement.value} className="rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4 backdrop-blur-xl md:rounded-[1.8rem] md:p-5">
+-                  <div className="text-[0.6rem] uppercase tracking-[0.3em] text-accent/80 md:text-[0.62rem]">{statement.kicker}</div>
+-                  <div className="mt-3 font-heading text-4xl leading-none text-white md:mt-4 md:text-5xl">{statement.value}</div>
+-                  <p className="mt-3 text-sm leading-6 text-[#eadfcb]/68">{statement.copy}</p>
+-                </div>
+-              ))}
+-            </div>
+-
+-            <div className="flex flex-wrap gap-2.5 md:gap-3">
+-              {categories.map((category) => (
+-                <button
+-                  key={category}
+-                  type="button"
+-                  onClick={() => setActiveCategory(category)}
+-                  className={`rounded-full border px-4 py-2.5 text-[0.62rem] font-extrabold uppercase tracking-[0.24em] transition-all md:px-5 md:py-3 md:text-[0.68rem] md:tracking-[0.28em] ${
+-                    activeCategory === category
+-                      ? 'border-accent bg-accent text-black shadow-[0_18px_40px_rgba(214,177,111,0.22)]'
+-                      : 'border-white/10 bg-white/[0.03] text-[#eadfcb] hover:border-accent/40 hover:bg-white/[0.06]'
+-                  }`}
+-                >
+-                  {category}
+-                </button>
+-              ))}
+-            </div>
+-          </div>
+-
+-          <div className="section-shell rounded-[2rem] p-3 sm:p-4 md:rounded-[2.7rem] md:p-5">
+-            {featuredItem && (
+-              <button
+-                type="button"
+-                onClick={() => setLightboxItem(featuredItem)}
+-                className="group relative block w-full overflow-hidden rounded-[1.7rem] text-left md:rounded-[2.2rem]"
+-              >
+-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.7rem] md:rounded-[2.2rem]">
+-                  <GalleryMedia item={featuredItem} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" priority allowVideo={false} />
+-
+-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,8,0.02),rgba(8,8,8,0.88))]" />
+-
+-                  <div className="absolute inset-x-4 top-4 flex items-start justify-between md:inset-x-8 md:top-8">
+-                    <div className="max-w-[7rem] text-[0.58rem] uppercase tracking-[0.35em] text-white/44 md:max-w-[8rem] md:text-[0.68rem] md:tracking-[0.42em]">
+-                      Signature bridal edit
+-                    </div>
+-                    <div className="rounded-full border border-white/10 bg-black/20 px-3 py-2 text-[0.58rem] font-bold uppercase tracking-[0.24em] text-accent/80 backdrop-blur-md md:text-[0.64rem]">
+-                      Featured
+-                    </div>
+-                  </div>
+-
+-                  <div className="absolute left-4 top-20 flex flex-wrap items-center gap-2.5 md:left-8 md:top-28 md:gap-3">
+-                    <span className="rounded-full border border-white/15 bg-black/25 px-3 py-2 text-[0.56rem] font-bold uppercase tracking-[0.22em] text-white/80 backdrop-blur-md md:text-[0.62rem] md:tracking-[0.28em]">
+-                      {featuredItem.category}
+-                    </span>
+-                    <span className="rounded-full border border-white/15 bg-black/25 px-3 py-2 text-[0.56rem] font-bold uppercase tracking-[0.22em] text-white/80 backdrop-blur-md md:text-[0.62rem] md:tracking-[0.28em]">
+-                      {featuredItem.type}
+-                    </span>
+-                  </div>
+-
+-                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 md:p-8">
+-                    <div className="flex items-end justify-between gap-4">
+-                      <div>
+-                        <div className="text-[0.62rem] uppercase tracking-[0.3em] text-accent/80 md:text-[0.7rem] md:tracking-[0.38em]">Featured Cover Story</div>
+-                        <h2 className="mt-3 max-w-xl font-heading text-3xl leading-[0.92] text-white sm:text-4xl md:text-[3.6rem]">{featuredItem.title}</h2>
+-                        <p className="mt-3 max-w-lg text-sm leading-6 text-[#f0e7d8]/78 md:mt-4 md:text-base md:leading-7">{featuredItem.description}</p>
+-                      </div>
+-                      <div className="hidden h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-transform duration-500 group-hover:scale-105 md:flex">
+-                        {featuredItem.type === 'video' ? <Play className="h-5 w-5 fill-white" /> : <ArrowUpRight className="h-5 w-5" />}
+-                      </div>
+-                    </div>
+-                  </div>
+-                </div>
+-              </button>
+-            )}
+-          </div>
+-        </div>
+-      </section>
+-
+-      <section className="relative mx-auto mt-10 max-w-7xl overflow-hidden">
+-        <div className="section-shell rounded-[2rem] px-4 py-5 md:rounded-[2.3rem] md:px-6">
+-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+-            <div>
+-              <p className="text-[0.68rem] uppercase tracking-[0.34em] text-accent/80 md:text-[0.72rem] md:tracking-[0.38em]">Lookbook Marquee</p>
+-              <h3 className="mt-2 font-heading text-3xl text-white">Auto-scrolling cover strip</h3>
+-            </div>
+-            <p className="max-w-md text-sm leading-6 text-[#eadfcb]/65 md:text-right">
+-              The horizontal rail is now a marquee-style strip. Tap any cover to make it the hero frame.
+-            </p>
+-          </div>
+-
+-          <div className="gallery-marquee-mask">
+-            <div className="gallery-marquee-track">
+-              {marqueeItems.map((item, index) => {
+-                const isActive = featuredItem?.id === item.id;
+-
+-                return (
+-                  <button
+-                    key={`${item.id}-${index}`}
+-                    type="button"
+-                    onClick={() => setActiveItemId(item.id)}
+-                    className={`group relative h-40 w-[220px] flex-none overflow-hidden rounded-[1.6rem] border text-left transition-all md:h-48 md:w-[260px] ${
+-                      isActive
+-                        ? 'border-accent shadow-[0_22px_45px_rgba(214,177,111,0.2)]'
+-                        : 'border-white/10 hover:border-white/25'
+-                    }`}
+-                  >
+-                    <GalleryMedia item={item} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" allowVideo={false} />
+-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.78))]" />
+-                    <div className="absolute inset-x-0 bottom-0 p-4">
+-                      <div className="text-[0.62rem] uppercase tracking-[0.32em] text-accent/80">Look {item.indexLabel}</div>
+-                      <div className="mt-2 font-heading text-2xl leading-none text-white">{item.title}</div>
+-                    </div>
+-                  </button>
+-                );
+-              })}
+-            </div>
+-          </div>
+-        </div>
+-      </section>
+-
+-      <section className="relative mx-auto mt-10 grid max-w-7xl gap-8 xl:grid-cols-[0.78fr_1.22fr]">
+-        <div className="section-shell rounded-[2rem] p-5 md:rounded-[2.2rem] md:p-8">
+-          <div className="section-label">
+-            <Sparkles className="h-4 w-4" />
+-            Direction Notes
+-          </div>
+-          <h3 className="mt-6 font-heading text-3xl leading-none text-white md:text-4xl">What this version is pushing toward</h3>
+-          <p className="mt-4 text-sm leading-7 text-[#eadfcb]/70 md:text-base md:leading-8">
+-            The page is now balancing three things at once: bridal softness, minimal layout discipline, and high-fashion presentation.
+-          </p>
+-
+-          <div className="mt-8 rounded-[1.4rem] border border-accent/20 bg-accent/10 p-4 md:rounded-[1.6rem] md:p-5">
+-            <div className="text-[0.64rem] uppercase tracking-[0.32em] text-accent/80">Current Focus</div>
+-            <div className="mt-3 font-heading text-3xl leading-none text-white">{activeCategory}</div>
+-            <p className="mt-3 text-sm leading-6 text-[#eadfcb]/72">{categoryNotes[activeCategory]}</p>
+-          </div>
+-
+-          <div className="mt-8 space-y-3">
+-            {categoryStats.map((entry) => (
+-              <button
+-                key={entry.category}
+-                type="button"
+-                onClick={() => setActiveCategory(entry.category)}
+-                className={`flex w-full items-center justify-between gap-4 rounded-[1.3rem] border px-4 py-4 text-left transition-all md:rounded-[1.4rem] ${
+-                  activeCategory === entry.category
+-                    ? 'border-accent bg-accent/10'
+-                    : 'border-white/10 bg-white/[0.02] hover:border-accent/30'
+-                }`}
+-              >
+-                <div>
+-                  <div className="text-[0.64rem] uppercase tracking-[0.32em] text-accent/80">{entry.category}</div>
+-                  <div className="mt-2 text-sm leading-6 text-[#eadfcb]/68">{categoryNotes[entry.category]}</div>
+-                </div>
+-                <div className="pl-2 font-heading text-3xl text-white md:pl-4 md:text-4xl">{entry.count}</div>
+-              </button>
+-            ))}
+-          </div>
+-        </div>
+-
+-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-5">
+-          {visibleShelf.map((item, index) => (
+-            <Motion.button
+-              key={item.id}
+-              type="button"
+-              initial={{ opacity: 0, y: 20 }}
+-              whileInView={{ opacity: 1, y: 0 }}
+-              viewport={{ once: true, margin: '-80px' }}
+-              transition={{ duration: 0.45, delay: index * 0.04 }}
+-              onClick={() => setLightboxItem(item)}
+-              className="group premium-card overflow-hidden rounded-[1.6rem] text-left md:rounded-[1.9rem]"
+-            >
+-              <div className="relative aspect-[4/5] overflow-hidden">
+-                <GalleryMedia item={item} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" allowVideo={false} />
+-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.78))]" />
+-                <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/25 px-3 py-2 text-[0.6rem] font-bold uppercase tracking-[0.26em] text-white/78 backdrop-blur-md">
+-                  {item.category}
+-                </div>
+-                <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
+-                  <div className="text-[0.62rem] uppercase tracking-[0.28em] text-accent/80">Open Editorial</div>
+-                  <h4 className="mt-2 font-heading text-[1.9rem] leading-none text-white md:text-3xl">{item.title}</h4>
+-                  <p className="mt-3 text-sm leading-6 text-[#f2eadc]/72">{item.description}</p>
+-                </div>
+-              </div>
+-            </Motion.button>
+-          ))}
+-        </div>
+-      </section>
+-
+-      <AnimatePresence>
+-        {lightboxItem && (
+-          <Motion.div
+-            initial={{ opacity: 0 }}
+-            animate={{ opacity: 1 }}
+-            exit={{ opacity: 0 }}
+-            className="fixed inset-0 z-[90] bg-[rgba(5,5,5,0.92)] p-3 backdrop-blur-xl sm:p-4 md:p-8"
+-            onClick={() => setLightboxItem(null)}
+-          >
+-            <Motion.div
+-              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+-              animate={{ opacity: 1, y: 0, scale: 1 }}
+-              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+-              transition={{ duration: 0.35 }}
+-              className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#090909] md:rounded-[2rem]"
+-              onClick={(event) => event.stopPropagation()}
+-            >
+-              <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-4 md:px-7">
+-                <div>
+-                  <div className="text-[0.64rem] uppercase tracking-[0.28em] text-accent/80 md:text-[0.68rem] md:tracking-[0.32em]">{lightboxItem.category}</div>
+-                  <h3 className="mt-2 font-heading text-2xl text-white md:text-4xl">{lightboxItem.title}</h3>
+-                </div>
+-                <button
+-                  type="button"
+-                  onClick={() => setLightboxItem(null)}
+-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-all hover:border-white/25 hover:bg-white/10 md:h-11 md:w-11"
+-                >
+-                  <X className="h-5 w-5" />
+-                </button>
+-              </div>
+-
+-              <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+-                <div className="min-h-[280px] bg-black">
+-                  {lightboxItem.type === 'video' ? (
+-                    <video src={lightboxItem.src} className="h-full w-full object-contain" controls autoPlay playsInline preload="metadata" />
+-                  ) : (
+-                    <img src={lightboxItem.src} alt={lightboxItem.title} className="h-full w-full object-contain" />
+-                  )}
+-                </div>
+-
+-                <div className="flex flex-col justify-between border-t border-white/10 p-5 lg:border-l lg:border-t-0 md:p-7">
+-                  <div>
+-                    <div className="text-[0.68rem] uppercase tracking-[0.3em] text-accent/80 md:text-[0.7rem] md:tracking-[0.34em]">Frame Notes</div>
+-                    <p className="mt-4 text-sm leading-7 text-[#eadfcb]/72 md:text-base md:leading-8">{lightboxItem.description}</p>
+-                  </div>
+-
+-                  <div className="mt-6 grid gap-4">
+-                    <div className="rounded-[1.2rem] border border-white/10 bg-white/[0.03] p-4 md:rounded-[1.4rem]">
+-                      <div className="text-[0.62rem] uppercase tracking-[0.26em] text-accent/80 md:text-[0.64rem] md:tracking-[0.28em]">Selected Category</div>
+-                      <div className="mt-2 text-xl font-heading text-white">{lightboxItem.category}</div>
+-                    </div>
+-                    <div className="rounded-[1.2rem] border border-white/10 bg-white/[0.03] p-4 md:rounded-[1.4rem]">
+-                      <div className="text-[0.62rem] uppercase tracking-[0.26em] text-accent/80 md:text-[0.64rem] md:tracking-[0.28em]">Media Type</div>
+-                      <div className="mt-2 text-xl font-heading text-white">{lightboxItem.type === 'video' ? 'Video Reel' : 'Still Image'}</div>
+-                    </div>
+-                    <div className="rounded-[1.2rem] border border-white/10 bg-white/[0.03] p-4 md:rounded-[1.4rem]">
+-                      <div className="text-[0.62rem] uppercase tracking-[0.26em] text-accent/80 md:text-[0.64rem] md:tracking-[0.28em]">Position</div>
+-                      <div className="mt-2 text-xl font-heading text-white">Frame {lightboxItem.indexLabel}</div>
+-                    </div>
+-                  </div>
+-                </div>
+-              </div>
+-            </Motion.div>
+-          </Motion.div>
+-        )}
+-      </AnimatePresence>
+-    </Motion.main>
+-  );
+-};
+-
+-export default Gallery;

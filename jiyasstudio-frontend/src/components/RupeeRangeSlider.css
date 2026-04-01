@@ -1,0 +1,18 @@
+.rupee-range-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+.rupee-range-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #eadfc9;
+  margin-bottom: 0.25rem;
+}
+.rupee-range-input[type="range"] {
+  width: 100%;
+  accent-color: #d6b16f;
+  margin-bottom: 0.25rem;
+}
