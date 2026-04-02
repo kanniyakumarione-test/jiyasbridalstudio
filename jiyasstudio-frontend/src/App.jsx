@@ -13,6 +13,14 @@ import Seo from './components/Seo';
 
 import './App.css';
 
+const RouteFallback = () => (
+  <div className="min-h-[60vh] px-4 pt-32 sm:px-[5%]">
+    <div className="section-shell mx-auto max-w-5xl rounded-[2rem] p-8 text-sm uppercase tracking-[0.24em] text-[#d9c8a6]/78">
+      Loading page...
+    </div>
+  </div>
+);
+
 const Home = lazy(() => import('./pages/Home'));
 const About = lazy(() => import('./pages/About'));
 const Services = lazy(() => import('./pages/Services'));
@@ -50,6 +58,12 @@ const App = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+
+    root.classList.add('theme-switching');
+    body.classList.add('theme-switching');
+
     document.documentElement.classList.remove('theme-light', 'theme-dark', 'light', 'dark');
     document.body.classList.remove('theme-light', 'theme-dark', 'light', 'dark');
     
@@ -64,6 +78,17 @@ const App = () => {
     document.body.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
     window.localStorage.setItem('jiya-theme', theme);
+
+    const cleanupTimer = window.setTimeout(() => {
+      root.classList.remove('theme-switching');
+      body.classList.remove('theme-switching');
+    }, 180);
+
+    return () => {
+      window.clearTimeout(cleanupTimer);
+      root.classList.remove('theme-switching');
+      body.classList.remove('theme-switching');
+    };
   }, [theme]);
 
   // Define if we are in admin area to hide global nav/footer
@@ -85,7 +110,7 @@ const App = () => {
           <Navbar theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />
         )}
 
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteFallback />}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<Home theme={theme} />} />

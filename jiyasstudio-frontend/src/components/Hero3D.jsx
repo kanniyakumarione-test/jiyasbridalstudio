@@ -127,19 +127,30 @@ const Hero3D = ({ theme = 'dark' }) => {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
+    const webglCanvas = document.createElement('canvas');
+    const hasWebGL = Boolean(webglCanvas.getContext('webgl') || webglCanvas.getContext('experimental-webgl'));
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const pointerQuery = window.matchMedia('(pointer: coarse)');
     const isSmallTouchViewport = pointerQuery.matches && window.innerWidth < 1024;
+    const lowPowerDevice =
+      (typeof navigator !== 'undefined' && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6) ||
+      (typeof navigator !== 'undefined' && navigator.deviceMemory && navigator.deviceMemory <= 6);
 
-    if (mediaQuery.matches || isSmallTouchViewport) {
+    if (!hasWebGL || mediaQuery.matches || isSmallTouchViewport || lowPowerDevice) {
       return undefined;
     }
 
-    const timer = window.setTimeout(() => {
-      setShouldRender(true);
-    }, 120);
+    const scheduleRender = window.requestIdleCallback
+      ? window.requestIdleCallback(() => setShouldRender(true), { timeout: 900 })
+      : window.setTimeout(() => setShouldRender(true), 320);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      if (typeof scheduleRender === 'number') {
+        window.clearTimeout(scheduleRender);
+      } else {
+        window.cancelIdleCallback?.(scheduleRender);
+      }
+    };
   }, []);
 
   if (!shouldRender) {
@@ -160,14 +171,14 @@ const Hero3D = ({ theme = 'dark' }) => {
         transition: 'opacity 0.35s ease',
       }}
     >
-      <Canvas camera={{ position: [0, 0, 8.5], fov: 42 }} dpr={[1, 1.25]} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+      <Canvas camera={{ position: [0, 0, 8.5], fov: 42 }} dpr={[1, 1.15]} gl={{ antialias: false, powerPreference: 'low-power' }}>
         <ambientLight intensity={theme === 'light' ? 0.4 : 0.28} />
         <directionalLight position={[8, 6, 6]} intensity={theme === 'light' ? 1.8 : 2.1} color="#ffffff" />
         <pointLight position={[-6, -4, 4]} intensity={theme === 'light' ? 0.8 : 1.1} color="#f2e2c6" />
         <pointLight position={[0, 2, 6]} intensity={theme === 'light' ? 1 : 1.4} color="#ffd36b" />
         
-        <Stars radius={70} depth={32} count={theme === 'light' ? 520 : 900} factor={3} saturation={0} fade speed={0.5} />
-        <Sparkles count={theme === 'light' ? 20 : 36} scale={12} size={3} speed={0.18} opacity={theme === 'light' ? 0.16 : 0.24} color="#D4AF37" />
+        <Stars radius={56} depth={26} count={theme === 'light' ? 180 : 320} factor={2.2} saturation={0} fade speed={0.35} />
+        <Sparkles count={theme === 'light' ? 8 : 14} scale={10} size={2.2} speed={0.14} opacity={theme === 'light' ? 0.12 : 0.18} color="#D4AF37" />
         
         <LogoStack />
         

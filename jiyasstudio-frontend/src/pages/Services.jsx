@@ -1,10 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Check, ChevronDown, ChevronRight, Crown, Scissors, Search, Shield, Sparkles, TicketPercent, WandSparkles } from 'lucide-react';
 import { packages, serviceGroups } from '../data/servicesData';
 import RupeeRangeSlider from '../components/RupeeRangeSlider';
 import { fadeInUp, pageTransition } from '../lib/motion';
+
+const LIVE_SERVICES_CACHE_KEY = 'jiya-live-services-v1';
+const LIVE_SERVICES_CACHE_TTL = 1000 * 60 * 10;
+
 const p = (value) => Number(String(value).replace(/,/g, '').match(/\d+/)?.[0] ?? 0);
 const matchText = (section, query) => !query || [section.title, section.note, ...(section.items ?? []).map((i) => i.name ?? i)].join(' ').toLowerCase().includes(query);
 
@@ -72,69 +76,76 @@ const FilterDropdown = ({ label, value, options, onChange }) => {
   );
 };
 
-const OfferCard = ({ title, note, items, strike, offer, image, slug }) => (
-  <Motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeInUp}>
-    <Link to={`/packages/${slug}`} className="section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
-      <div className="absolute inset-0">
-        <img
-          src="/logo.png"
-          alt="Jiya's Studio logo"
-          className="h-full w-full object-contain object-center p-4 opacity-16 transition-transform duration-700 group-hover:scale-[1.02]"
-        />
-        <div className="editorial-overlay-soft absolute inset-0" />
-      </div>
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))]" />
-      <div className="relative flex min-h-[320px] flex-col justify-between p-6 md:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div className="rounded-full border border-[rgba(214,177,111,0.24)] bg-[rgba(214,177,111,0.12)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">
-            {items.length} Inclusions
-          </div>
-          <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#eadfc9]">
-            Package
-          </div>
+const OfferCardBody = ({ title, note, items, strike, offer, slug }) => (
+  <Link to={`/packages/${slug}`} className="section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
+    <div className="absolute inset-0">
+      <img
+        src="/logo.png"
+        alt="Jiya's Studio logo"
+        className="h-full w-full object-contain object-center p-4 opacity-16 transition-transform duration-700 group-hover:scale-[1.02]"
+      />
+      <div className="editorial-overlay-soft absolute inset-0" />
+    </div>
+    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))]" />
+    <div className="relative flex min-h-[320px] flex-col justify-between p-6 md:p-7">
+      <div className="flex items-start justify-between gap-4">
+        <div className="rounded-full border border-[rgba(214,177,111,0.24)] bg-[rgba(214,177,111,0.12)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">
+          {items.length} Inclusions
         </div>
-        <div className="mt-6 flex flex-1 flex-col">
-          <div className="text-sm font-semibold uppercase tracking-[0.32em] text-accent">{title}</div>
-          <p className="mt-4 max-w-xl text-base leading-8 text-[#e4d8c2]">{note}</p>
+        <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#eadfc9]">
+          Package
+        </div>
+      </div>
+      <div className="mt-6 flex flex-1 flex-col">
+        <div className="text-sm font-semibold uppercase tracking-[0.32em] text-accent">{title}</div>
+        <p className="mt-4 max-w-xl text-base leading-8 text-[#e4d8c2]">{note}</p>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {items.slice(0, 3).map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]"
-              >
-                {item}
-              </span>
-            ))}
-            {items.length > 3 ? (
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]">
-                +{items.length - 3} More
-              </span>
-            ) : null}
-          </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {items.slice(0, 3).map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]"
+            >
+              {item}
+            </span>
+          ))}
+          {items.length > 3 ? (
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]">
+              +{items.length - 3} More
+            </span>
+          ) : null}
+        </div>
 
-          <div className="mt-auto pt-6">
-            <div className="flex flex-wrap items-center gap-4">
-              {strike ? (
-                <div className="rounded-full border border-red-500/35 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 line-through">
-                  Rs.{strike}
-                </div>
-              ) : null}
-              <div className="rounded-full bg-accent px-5 py-2.5 text-lg font-bold text-black shadow-[0_14px_30px_rgba(214,177,111,0.22)]">
-                Rs.{offer}/-
+        <div className="mt-auto pt-6">
+          <div className="flex flex-wrap items-center gap-4">
+            {strike ? (
+              <div className="rounded-full border border-red-500/35 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 line-through">
+                Rs.{strike}
               </div>
+            ) : null}
+            <div className="rounded-full bg-accent px-5 py-2.5 text-lg font-bold text-black shadow-[0_14px_30px_rgba(214,177,111,0.22)]">
+              Rs.{offer}/-
             </div>
+          </div>
 
-            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-accent">
-              Open Package
-              <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </div>
+          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-accent">
+            Open Package
+            <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </div>
         </div>
       </div>
-    </Link>
-  </Motion.div>
+    </div>
+  </Link>
 );
+
+const OfferCard = ({ reduceMotion, ...props }) =>
+  reduceMotion ? (
+    <OfferCardBody {...props} />
+  ) : (
+    <Motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeInUp}>
+      <OfferCardBody {...props} />
+    </Motion.div>
+  );
 
 
 
@@ -145,14 +156,50 @@ const Services = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [rupeeRange, setRupeeRange] = useState([0, 20000]);
   const [selectedServices, setSelectedServices] = useState([]); // Cart state
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   const scriptUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   // Fetch live services from Google Sheets
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const coarsePointer = window.matchMedia('(pointer: coarse)');
+    const lowPowerDevice =
+      (typeof navigator !== 'undefined' && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6) ||
+      (typeof navigator !== 'undefined' && navigator.deviceMemory && navigator.deviceMemory <= 6);
+
+    const updateMotionMode = () => {
+      setReduceMotion(mediaQuery.matches || coarsePointer.matches || window.innerWidth < 1100 || lowPowerDevice);
+    };
+
+    updateMotionMode();
+    mediaQuery.addEventListener?.('change', updateMotionMode);
+    coarsePointer.addEventListener?.('change', updateMotionMode);
+    window.addEventListener('resize', updateMotionMode);
+
+    return () => {
+      mediaQuery.removeEventListener?.('change', updateMotionMode);
+      coarsePointer.removeEventListener?.('change', updateMotionMode);
+      window.removeEventListener('resize', updateMotionMode);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchLiveServices = async () => {
       if (!scriptUrl) return;
       try {
+        const cachedValue = window.sessionStorage.getItem(LIVE_SERVICES_CACHE_KEY);
+        if (cachedValue) {
+          const cached = JSON.parse(cachedValue);
+          if (cached?.expiresAt > Date.now() && Array.isArray(cached?.data) && cached.data.length > 0) {
+            setLiveServices(cached.data);
+            return;
+          }
+        }
+
         setIsLiveLoading(true);
         const resp = await fetch(`${scriptUrl}?entity=Services`);
         const data = await resp.json();
@@ -192,6 +239,10 @@ const Services = () => {
           const validGroups = groups.filter(g => g.sections.length > 0);
           if (validGroups.length > 0) {
             setLiveServices(groups);
+            window.sessionStorage.setItem(
+              LIVE_SERVICES_CACHE_KEY,
+              JSON.stringify({ data: groups, expiresAt: Date.now() + LIVE_SERVICES_CACHE_TTL })
+            );
           }
         }
       } catch (err) {
@@ -206,7 +257,7 @@ const Services = () => {
   // Use live services if available, otherwise fallback to static data
   const activeServiceGroups = liveServices.length > 0 ? liveServices : serviceGroups;
 
-  const q = searchTerm.trim().toLowerCase();
+  const q = deferredSearchTerm.trim().toLowerCase();
 
   // Add/remove service from cart
   const toggleService = (service) => {
@@ -240,15 +291,18 @@ const Services = () => {
 
 
   // Find all matching services (flattened)
-  let matchingServices = [];
-  if (q) {
+  const matchingServices = useMemo(() => {
+    if (!q) return [];
+
+    const nextMatches = [];
+
     activeServiceGroups
       .filter((group) => categoryFilter === 'all' || categoryFilter === group.key)
       .forEach((group) => {
         group.sections.forEach((section) => {
           section.items.forEach((item) => {
             if (item.name && item.name.toLowerCase().includes(q) && inRupeeRange(item.price)) {
-              matchingServices.push({
+              nextMatches.push({
                 ...item,
                 sectionTitle: section.title,
                 groupLabel: group.label,
@@ -258,50 +312,59 @@ const Services = () => {
           });
         });
       });
-  }
 
-  const filteredGroups = !q
-    ? activeServiceGroups
-        .filter((group) => categoryFilter === 'all' || categoryFilter === group.key)
-        .map((group) => ({
-          ...group,
-          sections: group.sections
-            .map((section) => {
-              const items = section.items.filter((item) => inRupeeRange(item.price));
-              const keep =
-                items.length > 0 ||
-                section.items.some((item) => inRupeeRange(item.price));
-              return keep
-                ? {
-                    ...section,
-                    items,
-                    count: section.items.length,
-                    slug:
-                      section.slug ??
-                      section.title
-                        .toLowerCase()
-                        .replace(/&/g, 'and')
-                        .replace(/[^a-z0-9]+/g, '-')
-                        .replace(/^-+|-+$/g, ''),
-                  }
-                : null;
-            })
-            .filter(Boolean),
-        }))
-        .filter((group) => group.sections.length)
-    : [];
+    return nextMatches;
+  }, [activeServiceGroups, categoryFilter, q, rupeeRange]);
 
-  const filteredPackages =
-    categoryFilter === 'all' || categoryFilter === 'packages'
-      ? packages.filter(
-          (pkg) =>
-            (!q || matchText({ ...pkg, note: '' }, q)) &&
-            inRupeeRange(pkg.offer)
-        )
-      : [];
+  const filteredGroups = useMemo(
+    () =>
+      !q
+        ? activeServiceGroups
+            .filter((group) => categoryFilter === 'all' || categoryFilter === group.key)
+            .map((group) => ({
+              ...group,
+              sections: group.sections
+                .map((section) => {
+                  const items = section.items.filter((item) => inRupeeRange(item.price));
+                  const keep = items.length > 0 || section.items.some((item) => inRupeeRange(item.price));
+                  return keep
+                    ? {
+                        ...section,
+                        items,
+                        count: section.items.length,
+                        slug:
+                          section.slug ??
+                          section.title
+                            .toLowerCase()
+                            .replace(/&/g, 'and')
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/^-+|-+$/g, ''),
+                      }
+                    : null;
+                })
+                .filter(Boolean),
+            }))
+            .filter((group) => group.sections.length)
+        : [],
+    [activeServiceGroups, categoryFilter, q, rupeeRange]
+  );
+
+  const filteredPackages = useMemo(
+    () =>
+      categoryFilter === 'all' || categoryFilter === 'packages'
+        ? packages.filter((pkg) => (!q || matchText({ ...pkg, note: '' }, q)) && inRupeeRange(pkg.offer))
+        : [],
+    [categoryFilter, q, rupeeRange]
+  );
 
   return (
-    <Motion.main variants={pageTransition} initial="initial" animate="animate" exit="exit" className="page-shell min-h-screen px-[5%] pb-16 pt-32 transition-colors duration-500">
+    <Motion.main
+      variants={reduceMotion ? undefined : pageTransition}
+      initial={reduceMotion ? false : 'initial'}
+      animate={reduceMotion ? undefined : 'animate'}
+      exit={reduceMotion ? undefined : 'exit'}
+      className="page-shell min-h-screen px-[5%] pb-16 pt-32 transition-colors duration-500"
+    >
       <section className="section-shell interactive-panel editorial-panel overflow-hidden">
         <div className="absolute inset-0">
           <img src="https://images.unsplash.com/photo-1559599101-f09722fb4948?auto=format&fit=crop&w=1600&q=80" alt="Premium beauty service" className="editorial-image opacity-20" />
@@ -377,9 +440,10 @@ const Services = () => {
 
       {q && matchingServices.length > 0 && (
         <section className="py-10">
-          <div className="mb-8 flex items-center gap-4">
+          <div className="mb-8 flex flex-wrap items-center gap-4">
             <div className="section-label"><Search className="h-4 w-4" />Matching Services</div>
             <p className="text-sm uppercase tracking-[0.28em] text-[#baa98e]">Results for "{searchTerm}"</p>
+            {isLiveLoading ? <p className="text-xs uppercase tracking-[0.24em] text-[#8f826d]">Refreshing live menu...</p> : null}
           </div>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {matchingServices.map((item, idx) => {
@@ -450,7 +514,7 @@ const Services = () => {
             <div className="section-label"><TicketPercent className="h-4 w-4" />Packages</div>
             <p className="text-sm uppercase tracking-[0.28em] text-[#baa98e]">Offer pricing and combo bundles</p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{filteredPackages.map((item) => <OfferCard key={item.title} {...item} />)}</div>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{filteredPackages.map((item) => <OfferCard key={item.title} reduceMotion={reduceMotion} {...item} />)}</div>
         </section>
       ) : null}
 

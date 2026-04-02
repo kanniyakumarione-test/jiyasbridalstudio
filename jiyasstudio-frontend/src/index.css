@@ -77,7 +77,7 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  transition: background 0.45s ease, background-color 0.45s ease, color 0.3s ease;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .theme-light body,
@@ -351,7 +351,7 @@ a {
 .theme-light .app-container {
   background: transparent;
   color: var(--text-primary);
-  transition: background-color 0.45s ease;
+  transition: background-color 0.18s ease;
 }
 
 .theme-light .mix-blend-overlay {
@@ -592,7 +592,22 @@ a {
 
 /* Ensure transitions are smooth but don't show black mid-way */
 .theme-light {
-  transition: background-color 0.3s ease;
+  transition: background-color 0.18s ease;
+}
+
+.theme-switching,
+.theme-switching body,
+.theme-switching #root,
+.theme-switching .app-container {
+  transition: none !important;
+}
+
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
 }
 
 /* Before/After Specific Fixes */
@@ -662,4 +677,202 @@ a {
   background-color: rgba(33, 23, 13, 0.58) !important;
   color: #fff7ee !important;
   border-color: rgba(255, 241, 222, 0.18) !important;
+}
+
+/* Final Light Theme Redesign */
+.theme-light {
+  --page-bg:
+    radial-gradient(circle at 8% 8%, rgba(214, 177, 111, 0.16), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(188, 120, 66, 0.11), transparent 24%),
+    linear-gradient(180deg, #fbf4ea 0%, #f5ecdf 48%, #efe5d7 100%);
+  --page-solid: #fbf4ea;
+  --text-primary: #26180f;
+  --text-secondary: #6f5844;
+  --text-muted-soft: #947a60;
+  --shell-bg: linear-gradient(180deg, rgba(255, 252, 247, 0.95), rgba(247, 240, 231, 0.92));
+  --card-bg: rgba(255, 250, 243, 0.86);
+  --card-shadow: 0 18px 40px rgba(104, 72, 38, 0.08);
+  --section-shadow: 0 30px 70px rgba(110, 80, 44, 0.09);
+  --scroll-track: #eadbc7;
+  --scroll-thumb: rgba(146, 103, 55, 0.28);
+  --scroll-thumb-hover: rgba(146, 103, 55, 0.42);
+  --color-glass-border: rgba(143, 103, 57, 0.16);
+  --color-glass: rgba(255, 248, 239, 0.84);
+  --color-accent: #b97b37;
+  --color-accent-soft: #f1d1aa;
+  --color-accent-hover: #c78b49;
+  --footer-card-bg: rgba(255, 251, 245, 0.95);
+}
+
+.theme-light body,
+.theme-light #root,
+.theme-light .app-container,
+.theme-light main {
+  background: var(--page-bg) !important;
+  background-color: var(--page-solid) !important;
+}
+
+.theme-light .mix-blend-overlay {
+  opacity: 0.008 !important;
+}
+
+.theme-light .section-shell,
+.theme-light .premium-card {
+  background: var(--shell-bg) !important;
+  border-color: rgba(143, 103, 57, 0.14) !important;
+  box-shadow: var(--section-shadow);
+}
+
+.theme-light .premium-card {
+  background: var(--card-bg) !important;
+  box-shadow: var(--card-shadow);
+}
+
+.theme-light .section-label {
+  background: rgba(255, 247, 236, 0.78) !important;
+  border-color: rgba(166, 119, 68, 0.18) !important;
+  color: #a46b31 !important;
+}
+
+.theme-light .text-white,
+.theme-light h1,
+.theme-light h2,
+.theme-light h3,
+.theme-light h4 {
+  color: var(--text-primary) !important;
+}
+
+.theme-light .text-gradient {
+  background-image: linear-gradient(90deg, #2b1b12, #9c6630, #c99153);
+}
+
+.theme-light .text-accent,
+.theme-light .text-\[#CBB279\] {
+  color: #a46931 !important;
+}
+
+.theme-light .bg-accent,
+.theme-light .bg-\[#CBB279\] {
+  background-color: #c88d4a !important;
+}
+
+.theme-light .border-accent,
+.theme-light .border-\[#CBB279\] {
+  border-color: rgba(164, 105, 49, 0.28) !important;
+}
+
+.theme-light .interactive-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(145, 101, 56, 0.13), 0 0 0 1px rgba(196, 141, 74, 0.08);
+}
+
+.theme-light .interactive-panel::after {
+  background: linear-gradient(120deg, transparent 10%, rgba(200, 141, 74, 0.14) 50%, transparent 82%);
+}
+
+.theme-light .bg-black,
+.theme-light .bg-obsidian,
+.theme-light.bg-black,
+.theme-light.bg-obsidian,
+.theme-light [class*="bg-black"],
+.theme-light [class*="bg-obsidian"],
+.theme-light [class*="bg-[#050505]"],
+.theme-light [class*="bg-[#121212]"],
+.theme-light [class*="bg-[#181511]"],
+.theme-light [class*="bg-[#1e1a15]"],
+.theme-light [class*="bg-[#1a1712]"] {
+  background-color: transparent !important;
+}
+
+.theme-light .bg-white\/5,
+.theme-light .bg-white\/\[0\.03\],
+.theme-light .bg-white\/\[0\.04\],
+.theme-light .bg-white\/\[0\.05\],
+.theme-light .bg-white\/\[0\.06\],
+.theme-light .bg-black\/20,
+.theme-light .bg-black\/25,
+.theme-light .bg-black\/30,
+.theme-light .bg-black\/35,
+.theme-light .bg-black\/40,
+.theme-light .bg-black\/60 {
+  background-color: rgba(255, 248, 239, 0.72) !important;
+  color: var(--text-primary) !important;
+}
+
+.theme-light .editorial-image {
+  opacity: 0.78 !important;
+  filter: saturate(0.92) brightness(1.02) contrast(0.98);
+}
+
+.theme-light .editorial-overlay-soft {
+  background:
+    linear-gradient(135deg, rgba(255, 250, 244, 0.18), rgba(255, 245, 234, 0.04) 42%, rgba(47, 29, 15, 0.34)),
+    radial-gradient(circle at top right, rgba(201, 145, 83, 0.12), transparent 34%) !important;
+}
+
+.theme-light .editorial-overlay-bottom {
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0.02), rgba(43, 27, 15, 0.68) 95%) !important;
+}
+
+.theme-light .gallery-hero-overlay {
+  background: linear-gradient(180deg, rgba(255, 248, 239, 0.02), rgba(61, 40, 20, 0.16) 52%, rgba(33, 21, 12, 0.72)) !important;
+}
+
+.theme-light .gallery-tag,
+.theme-light .editorial-overlay-soft ~ * .bg-black\/35,
+.theme-light .editorial-overlay-soft ~ * .bg-black\/60,
+.theme-light .editorial-overlay-bottom ~ * .bg-black\/35,
+.theme-light .editorial-overlay-bottom ~ * .bg-black\/60,
+.theme-light .gallery-hero-overlay ~ * .bg-black\/35,
+.theme-light .gallery-hero-overlay ~ * .bg-black\/60 {
+  background-color: rgba(38, 24, 15, 0.58) !important;
+  color: #fff6ea !important;
+  border-color: rgba(255, 238, 214, 0.2) !important;
+}
+
+.theme-light .editorial-overlay-soft ~ *,
+.theme-light .editorial-overlay-bottom ~ *,
+.theme-light .gallery-hero-overlay ~ * {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.theme-light .editorial-overlay-soft ~ * .text-primary,
+.theme-light .editorial-overlay-soft ~ * .text-white,
+.theme-light .editorial-overlay-bottom ~ * .text-primary,
+.theme-light .editorial-overlay-bottom ~ * .text-white,
+.theme-light .gallery-hero-overlay ~ * .text-primary,
+.theme-light .gallery-hero-overlay ~ * .text-white,
+.theme-light .editorial-overlay-soft ~ * h1,
+.theme-light .editorial-overlay-soft ~ * h2,
+.theme-light .editorial-overlay-soft ~ * h3,
+.theme-light .editorial-overlay-bottom ~ * h1,
+.theme-light .editorial-overlay-bottom ~ * h2,
+.theme-light .editorial-overlay-bottom ~ * h3,
+.theme-light .gallery-hero-overlay ~ * h1,
+.theme-light .gallery-hero-overlay ~ * h2,
+.theme-light .gallery-hero-overlay ~ * h3 {
+  color: #fff6ea !important;
+}
+
+.theme-light .editorial-overlay-soft ~ * .section-copy,
+.theme-light .editorial-overlay-bottom ~ * .section-copy,
+.theme-light .gallery-hero-overlay ~ * .section-copy {
+  color: rgba(255, 240, 221, 0.9) !important;
+}
+
+.theme-light .marquee-pill,
+.theme-light .service-row {
+  background: rgba(255, 248, 239, 0.8) !important;
+  border-color: rgba(166, 119, 68, 0.14) !important;
+}
+
+.theme-light .testimonial-card {
+  background:
+    radial-gradient(circle at top right, rgba(200, 141, 74, 0.12), transparent 38%),
+    linear-gradient(180deg, rgba(255, 250, 243, 0.95), rgba(245, 236, 225, 0.92)) !important;
+}
+
+.theme-light .orb,
+.theme-light [class*="orb-"] {
+  display: none !important;
 }

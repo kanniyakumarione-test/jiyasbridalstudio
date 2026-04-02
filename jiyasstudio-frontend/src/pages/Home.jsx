@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -13,12 +13,10 @@ import {
   Sparkles,
   Star,
 } from 'lucide-react';
-import Hero3D from '../components/Hero3D';
 import { fadeInUp, staggerContainer } from '../lib/motion';
-import bridalWork1 from '../assets/images/bridal-purple-saree-chair-portrait.jpg';
-import hairWork1 from '../assets/images/bridal-red-saree-soft-focus-portrait.jpg';
-import makeupWork1 from '../assets/images/bridal-red-saree-jewelry-closeup.jpg';
-import skinWork1 from '../assets/images/bridal-red-saree-look-collage.jpg';
+import { loadHomeFeaturedLooks } from '../data/homeFeaturedLooks';
+
+const Hero3D = lazy(() => import('../components/Hero3D'));
 
 const signatureCollections = [
   {
@@ -91,45 +89,71 @@ const marqueeItems = [
 ];
 
 const testimonialCarousel = [...testimonials, ...testimonials];
-const featuredLooks = [
-  {
-    title: 'Bridal Signature',
-    category: 'Bridal Beauty',
-    image: bridalWork1,
-    outcome: 'Soft glam finishing, balanced detail, and a polished look made for ceremony moments.',
-  },
-  {
-    title: 'Hair Editorial',
-    category: 'Hair Styling',
-    image: hairWork1,
-    outcome: 'Clean framing, expressive finish, and styling that feels current without losing softness.',
-  },
-  {
-    title: 'Makeup Finish',
-    category: 'Makeup Look',
-    image: makeupWork1,
-    outcome: 'Rich color balance, camera-ready detail, and a finish designed to photograph beautifully.',
-  },
-  {
-    title: 'Skin Glow',
-    category: 'Skin Ritual',
-    image: skinWork1,
-    outcome: 'Fresh texture, brighter finish, and glow-focused care designed for confident everyday beauty.',
-  },
-];
-
 const Home = ({ theme = 'dark' }) => {
+  const [featuredLooks, setFeaturedLooks] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrateFeaturedLooks() {
+      const looks = await loadHomeFeaturedLooks();
+      if (!cancelled) {
+        setFeaturedLooks(looks);
+      }
+    }
+
+    hydrateFeaturedLooks();
+
+    const handleWindowFocus = () => {
+      hydrateFeaturedLooks();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        hydrateFeaturedLooks();
+      }
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   return (
     <main className="relative overflow-hidden pt-28 md:pt-32 transition-colors duration-500">
-      <Hero3D theme={theme} />
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_72%_22%,rgba(212,175,55,0.08),transparent_25%),radial-gradient(circle_at_20%_38%,rgba(255,244,214,0.04),transparent_30%)]" />
-      <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-transparent via-black/5 to-black/10 dark:via-black/40 dark:to-black" />
+      <Suspense fallback={null}>
+        <Hero3D theme={theme} />
+      </Suspense>
+      <div
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background:
+            theme === 'light'
+              ? 'radial-gradient(circle at 72% 22%, rgba(185, 123, 55, 0.08), transparent 25%), radial-gradient(circle at 20% 38%, rgba(201, 145, 83, 0.05), transparent 30%)'
+              : 'radial-gradient(circle at 72% 22%, rgba(212, 175, 55, 0.08), transparent 25%), radial-gradient(circle at 20% 38%, rgba(255, 244, 214, 0.04), transparent 30%)',
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background:
+            theme === 'light'
+              ? 'linear-gradient(180deg, rgba(251, 244, 234, 0.02), rgba(245, 236, 223, 0.18), rgba(239, 229, 215, 0.32))'
+              : 'linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1))',
+        }}
+      />
       <section className="px-[5%] pb-8">
         <div className="section-shell editorial-panel relative z-10 overflow-hidden">
           <div className="absolute inset-0">
             <img
               src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1600&q=80"
-              alt="Luxury salon interior"
+              alt=""
+              aria-hidden="true"
               className="editorial-image opacity-34"
             />
             <div className="editorial-overlay-soft absolute inset-0" />
@@ -314,7 +338,11 @@ const Home = ({ theme = 'dark' }) => {
             {featuredLooks.map((item) => (
               <div key={item.title} className="premium-card interactive-panel overflow-hidden p-4">
                 <div className="relative overflow-hidden rounded-[1.4rem]">
-                  <img src={item.image} alt={item.title} className="h-72 w-full object-cover transition-transform duration-700 hover:scale-[1.03]" loading="lazy" />
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} className="h-72 w-full object-cover transition-transform duration-700 hover:scale-[1.03]" loading="lazy" />
+                  ) : (
+                    <div className="h-72 w-full bg-[linear-gradient(135deg,rgba(214,177,111,0.12),rgba(255,255,255,0.03))]" />
+                  )}
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.72))]" />
                   <div className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-[#f1e5cf]">
                     {item.category}
@@ -355,7 +383,8 @@ const Home = ({ theme = 'dark' }) => {
           <div className="section-shell editorial-panel overflow-hidden">
             <img
               src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1200&q=80"
-              alt="Beauty treatment"
+              alt=""
+              aria-hidden="true"
               className="editorial-image opacity-72"
             />
             <div className="editorial-overlay-bottom absolute inset-0" />
@@ -410,7 +439,8 @@ const Home = ({ theme = 'dark' }) => {
           <div className="absolute inset-0">
             <img
               src="https://images.unsplash.com/photo-1519415943484-b60278cbf3ad?auto=format&fit=crop&w=1600&q=80"
-              alt="Studio hair styling"
+              alt=""
+              aria-hidden="true"
               className="editorial-image home-footer-bridge-image opacity-24"
             />
             <div className="editorial-overlay-soft home-footer-bridge-overlay absolute inset-0" />

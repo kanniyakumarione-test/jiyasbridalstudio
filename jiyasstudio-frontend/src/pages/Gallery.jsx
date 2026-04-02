@@ -1,73 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Aperture, ArrowLeft, ArrowRight, ArrowUpRight, Image as ImageIcon, Play, X } from 'lucide-react';
-
-const imageGlob = import.meta.glob('../assets/images/*.{png,jpg,jpeg,webp}', { eager: true });
-const videoGlob = import.meta.glob('../assets/videos/*.{mp4,MP4}', { eager: true });
+import { useGesture } from '@use-gesture/react';
+import { hasRemoteGalleryMediaConfig, loadGalleryMedia } from '../data/galleryMedia';
 
 const INITIAL_IMAGE_COUNT = 4;
 const INITIAL_VIDEO_COUNT = 3;
-
-const getCategoryFromPath = (path) => {
-  const value = path.toLowerCase();
-
-  if (value.includes('bridal') || value.includes('makeup')) return 'Bridal';
-  if (value.includes('hair') || value.includes('cut')) return 'Hair';
-  if (value.includes('skin') || value.includes('glow')) return 'Skin';
-  return 'Studio';
-};
-
-const getTitleFromPath = (path) =>
-  path
-    .split('/')
-    .pop()
-    .split('.')[0]
-    .replace(/[_-]/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
-const getMoodCopy = (category, type) => {
-  const copyByCategory = {
-    Bridal: 'Soft ceremony glam with polished detail, balance, and camera-ready finish.',
-    Hair: 'Movement, shape, and texture framed to feel current and flattering.',
-    Skin: 'Glow-led treatment moments focused on freshness, calm, and clarity.',
-    Studio: "A closer look at the space, rituals, and signature atmosphere at Jiya's Studio.",
-  };
-
-  return `${copyByCategory[category]} ${type === 'video' ? 'Watch the transformation in motion.' : 'Pause on the details.'}`;
-};
-
-const imageItems = Object.entries(imageGlob)
-  .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
-  .map(([path, module]) => ({
-    id: path,
-    src: module.default,
-    title: getTitleFromPath(path),
-    category: getCategoryFromPath(path),
-    type: 'image',
-  }));
-
-const posterByCategory = imageItems.reduce((map, item) => {
-  if (!map[item.category]) map[item.category] = item.src;
-  return map;
-}, {});
-
-const videoItems = Object.entries(videoGlob)
-  .sort(([pathA], [pathB]) => pathA.localeCompare(pathB))
-  .map(([path, module], index) => ({
-    id: path,
-    src: module.default,
-    title: getTitleFromPath(path),
-    category: getCategoryFromPath(path),
-    type: 'video',
-    posterSrc: posterByCategory[getCategoryFromPath(path)] ?? imageItems[index % Math.max(imageItems.length, 1)]?.src ?? '',
-  }));
-
-const mediaItems = [...imageItems, ...videoItems].map((item, index) => ({
-  ...item,
-  indexLabel: String(index + 1).padStart(2, '0'),
-  posterSrc: item.type === 'image' ? item.src : item.posterSrc,
-  description: getMoodCopy(item.category, item.type),
-}));
 
 function GalleryPreviewMedia({ item, className = '' }) {
   const containerRef = useRef(null);
@@ -100,6 +38,8 @@ function GalleryPreviewMedia({ item, className = '' }) {
   }, [item.id, item.type]);
 
   if (item.type === 'video') {
+    const previewImageSrc = item.previewSrc || item.posterSrc;
+
     return (
       <div ref={containerRef} className={className}>
         {shouldLoadVideo ? (
@@ -113,14 +53,24 @@ function GalleryPreviewMedia({ item, className = '' }) {
             playsInline
             preload="none"
           />
-        ) : (
+        ) : previewImageSrc ? (
           <img
-            src={item.posterSrc}
+            src={previewImageSrc}
             alt={item.title}
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
           />
+        ) : (
+          <div className="flex h-full w-full items-end bg-[radial-gradient(circle_at_top,#7a5c2f_0%,#23180f_45%,#090909_100%)] p-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-[0.6rem] uppercase tracking-[0.24em] text-accent/85">
+                <Play className="h-3.5 w-3.5 fill-current" />
+                Video
+              </div>
+              <p className="mt-2 font-heading text-xl leading-tight text-white">{item.title}</p>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -128,7 +78,7 @@ function GalleryPreviewMedia({ item, className = '' }) {
 
   return (
     <img
-      src={item.posterSrc ?? item.src}
+      src={item.previewSrc ?? item.posterSrc ?? item.src}
       alt={item.title}
       loading="lazy"
       decoding="async"
@@ -138,10 +88,40 @@ function GalleryPreviewMedia({ item, className = '' }) {
 }
 
 export default function Gallery() {
+  const [galleryMedia, setGalleryMedia] = useState({ imageItems: [], videoItems: [], mediaItems: [] });
+  const [isMediaLoading, setIsMediaLoading] = useState(true);
   const [visibleImages, setVisibleImages] = useState(INITIAL_IMAGE_COUNT);
   const [visibleVideos, setVisibleVideos] = useState(INITIAL_VIDEO_COUNT);
   const [lightboxItem, setLightboxItem] = useState(null);
-  const [activeItemId, setActiveItemId] = useState(mediaItems[0]?.id ?? null);
+  const [activeItemId, setActiveItemId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrateGallery() {
+      setIsMediaLoading(true);
+
+      try {
+        const nextGalleryMedia = await loadGalleryMedia();
+
+        if (cancelled) return;
+        setGalleryMedia(nextGalleryMedia);
+        setActiveItemId((current) => current ?? nextGalleryMedia.mediaItems[0]?.id ?? null);
+      } finally {
+        if (!cancelled) {
+          setIsMediaLoading(false);
+        }
+      }
+    }
+
+    hydrateGallery();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { imageItems, videoItems, mediaItems } = galleryMedia;
 
   const filteredImages = imageItems;
   const filteredVideos = videoItems;
@@ -167,20 +147,72 @@ export default function Gallery() {
 
   const visibleImageItems = filteredImages.slice(0, visibleImages);
   const visibleVideoItems = filteredVideos.slice(0, visibleVideos);
-  const lightboxImageIndex =
-    lightboxItem?.type === 'image' ? filteredImages.findIndex((item) => item.id === lightboxItem.id) : -1;
+  const imageIndexById = useMemo(
+    () => new Map(filteredImages.map((item, index) => [item.id, index])),
+    [filteredImages]
+  );
+  const lightboxImageIndex = lightboxItem?.type === 'image' ? imageIndexById.get(lightboxItem.id) ?? -1 : -1;
 
   const openPreviousImage = () => {
     if (lightboxImageIndex < 0 || filteredImages.length < 2) return;
     const previousIndex = (lightboxImageIndex - 1 + filteredImages.length) % filteredImages.length;
-    setLightboxItem(filteredImages[previousIndex]);
+    startTransition(() => {
+      setLightboxItem(filteredImages[previousIndex]);
+    });
   };
 
   const openNextImage = () => {
     if (lightboxImageIndex < 0 || filteredImages.length < 2) return;
     const nextIndex = (lightboxImageIndex + 1) % filteredImages.length;
-    setLightboxItem(filteredImages[nextIndex]);
+    startTransition(() => {
+      setLightboxItem(filteredImages[nextIndex]);
+    });
   };
+
+  useEffect(() => {
+    if (lightboxImageIndex < 0 || filteredImages.length < 2) return undefined;
+
+    const preloadIndices = [
+      (lightboxImageIndex - 1 + filteredImages.length) % filteredImages.length,
+      (lightboxImageIndex + 1) % filteredImages.length,
+    ];
+
+    preloadIndices.forEach((index) => {
+      const src = filteredImages[index]?.src;
+      if (!src) return;
+      const image = new Image();
+      image.src = src;
+    });
+  }, [filteredImages, lightboxImageIndex]);
+
+  const bindLightboxSwipe = useGesture(
+    {
+      onDragEnd: ({ swipe: [swipeX], movement: [movementX], direction: [directionX], tap }) => {
+        if (lightboxItem?.type !== 'image') return;
+        if (tap) return;
+
+        const passedDistance = Math.abs(movementX) > 72;
+        if (!swipeX && !passedDistance) return;
+
+        if (swipeX === -1 || directionX === -1) {
+          openNextImage();
+          return;
+        }
+
+        if (swipeX === 1 || directionX === 1) {
+          openPreviousImage();
+        }
+      },
+    },
+    {
+      drag: {
+        axis: 'x',
+        pointer: { touch: true },
+        filterTaps: true,
+        threshold: 18,
+      },
+    }
+  );
 
   useEffect(() => {
     if (!featuredItem && filteredMedia[0]) {
@@ -244,12 +276,13 @@ export default function Gallery() {
               <div
                 className="relative flex h-screen w-screen items-center justify-center p-3 sm:p-5 md:p-8"
                 onClick={(event) => event.stopPropagation()}
+                {...bindLightboxSwipe()}
               >
                 {filteredImages.length > 1 ? (
                   <button
                     type="button"
                     onClick={openPreviousImage}
-                    className="absolute left-3 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:left-6 md:h-14 md:w-14"
+                    className="absolute left-3 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:left-6 md:h-14 md:w-14"
                     aria-label="Previous image"
                   >
                     <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
@@ -259,7 +292,7 @@ export default function Gallery() {
                 <button
                   type="button"
                   onClick={() => setLightboxItem(null)}
-                  className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:right-6 md:top-6"
+                  className="absolute right-3 top-3 z-10 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:right-6 md:top-6"
                   aria-label="Close viewer"
                 >
                   <X className="h-5 w-5" />
@@ -269,7 +302,7 @@ export default function Gallery() {
                   <button
                     type="button"
                     onClick={openNextImage}
-                    className="absolute right-3 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:right-6 md:h-14 md:w-14"
+                    className="absolute right-3 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 touch-manipulation items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:right-6 md:h-14 md:w-14"
                     aria-label="Next image"
                   >
                     <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
@@ -297,7 +330,7 @@ export default function Gallery() {
                 <button
                   type="button"
                   onClick={() => setLightboxItem(null)}
-                  className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:right-6 md:top-6"
+                  className="absolute right-3 top-3 z-10 flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/10 bg-black/60 text-white transition-all hover:border-white/25 hover:bg-black/85 md:right-6 md:top-6"
                   aria-label="Close video"
                 >
                   <X className="h-5 w-5" />
@@ -331,6 +364,19 @@ export default function Gallery() {
         </div>
 
       <section className="relative mx-auto max-w-7xl">
+        {isMediaLoading ? (
+          <div className="section-shell rounded-[2rem] p-8 text-sm text-[#eadfcb]/72 md:rounded-[2.4rem] md:p-10">
+            Loading gallery media...
+          </div>
+        ) : null}
+
+        {!isMediaLoading && hasRemoteGalleryMediaConfig && !filteredMedia.length ? (
+          <div className="section-shell rounded-[2rem] p-8 text-sm leading-7 text-[#eadfcb]/72 md:rounded-[2.4rem] md:p-10">
+            Remote gallery mode is enabled, but no media URLs could be generated. Add your Cloudinary image settings and video CDN settings in
+            `.env`, then rebuild the app.
+          </div>
+        ) : null}
+
         <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr] xl:items-center">
           <div className="space-y-6 md:space-y-8">
             <div className="section-label">
@@ -458,7 +504,7 @@ export default function Gallery() {
               >
                 <div className="relative aspect-[4/4.6] overflow-hidden">
                   <img
-                    src={item.src}
+                    src={item.previewSrc ?? item.src}
                     alt={item.title}
                     loading="lazy"
                     decoding="async"

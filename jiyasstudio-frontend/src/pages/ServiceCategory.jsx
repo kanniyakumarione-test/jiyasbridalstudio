@@ -4,17 +4,57 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeIndianRupee } from 'lucide-react';
 import { findServiceSectionBySlug } from '../data/servicesData';
 import { pageTransition } from '../lib/motion';
+
+const LIVE_CATEGORY_CACHE_PREFIX = 'jiya-live-category-v1:';
+const LIVE_CATEGORY_CACHE_TTL = 1000 * 60 * 10;
+
 const ServiceCategory = () => {
   const { slug } = useParams();
   const [liveSection, setLiveSection] = useState(null);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
   
   const scriptUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const coarsePointer = window.matchMedia('(pointer: coarse)');
+    const lowPowerDevice =
+      (typeof navigator !== 'undefined' && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6) ||
+      (typeof navigator !== 'undefined' && navigator.deviceMemory && navigator.deviceMemory <= 6);
+
+    const updateMotionMode = () => {
+      setReduceMotion(mediaQuery.matches || coarsePointer.matches || window.innerWidth < 1100 || lowPowerDevice);
+    };
+
+    updateMotionMode();
+    mediaQuery.addEventListener?.('change', updateMotionMode);
+    coarsePointer.addEventListener?.('change', updateMotionMode);
+    window.addEventListener('resize', updateMotionMode);
+
+    return () => {
+      mediaQuery.removeEventListener?.('change', updateMotionMode);
+      coarsePointer.removeEventListener?.('change', updateMotionMode);
+      window.removeEventListener('resize', updateMotionMode);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchLiveCategory = async () => {
       if (!scriptUrl) return;
       try {
+        const cacheKey = `${LIVE_CATEGORY_CACHE_PREFIX}${slug}`;
+        const cachedValue = window.sessionStorage.getItem(cacheKey);
+        if (cachedValue) {
+          const cached = JSON.parse(cachedValue);
+          if (cached?.expiresAt > Date.now() && cached?.data) {
+            setLiveSection(cached.data);
+            return;
+          }
+        }
+
         setIsLiveLoading(true);
         const resp = await fetch(`${scriptUrl}?entity=Services`);
         const data = await resp.json();
@@ -27,12 +67,14 @@ const ServiceCategory = () => {
 
           if (matchingItems.length > 0) {
             const first = matchingItems[0];
-            setLiveSection({
+            const nextSection = {
               title: first.subcategory || 'General',
               note: first.note || 'Professional salon care.',
               image: first.image || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=1200&q=80',
               items: matchingItems.map(m => ({ name: m.name, price: m.price }))
-            });
+            };
+            setLiveSection(nextSection);
+            window.sessionStorage.setItem(cacheKey, JSON.stringify({ data: nextSection, expiresAt: Date.now() + LIVE_CATEGORY_CACHE_TTL }));
           }
         }
       } catch (err) {
@@ -84,7 +126,13 @@ const ServiceCategory = () => {
   }
 
   return (
-    <Motion.main variants={pageTransition} initial="initial" animate="animate" exit="exit" className="page-shell min-h-screen bg-obsidian px-[5%] pb-16 pt-32">
+    <Motion.main
+      variants={reduceMotion ? undefined : pageTransition}
+      initial={reduceMotion ? false : 'initial'}
+      animate={reduceMotion ? undefined : 'animate'}
+      exit={reduceMotion ? undefined : 'exit'}
+      className="page-shell min-h-screen bg-obsidian px-[5%] pb-16 pt-32"
+    >
       <section className="section-shell interactive-panel editorial-panel overflow-hidden">
         <div className="absolute inset-0">
           <img src={section.image} alt={section.title} className="editorial-image opacity-24" />
@@ -94,7 +142,10 @@ const ServiceCategory = () => {
           <Link to="/services" className="section-label"><ArrowLeft className="h-4 w-4" />Back To Services</Link>
           <h1 className="mt-6 section-title">{section.title}</h1>
           <p className="mt-5 max-w-3xl section-copy">{section.note}</p>
-          <div className="mt-6 inline-flex rounded-full border border-glass-border bg-white/5 px-5 py-3 text-sm uppercase tracking-[0.24em] text-accent">{section.items.length} Services In This Category</div>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-full border border-glass-border bg-white/5 px-5 py-3 text-sm uppercase tracking-[0.24em] text-accent">{section.items.length} Services In This Category</div>
+            {isLiveLoading ? <div className="text-xs uppercase tracking-[0.24em] text-[#8f826d]">Refreshing live menu...</div> : null}
+          </div>
         </div>
       </section>
 
@@ -106,9 +157,9 @@ const ServiceCategory = () => {
               return (
                 <Motion.article
                   key={`${section.title}-${item.name}`}
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.32 }}
+                  initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                  animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  transition={reduceMotion ? undefined : { duration: 0.32 }}
                   className="interactive-panel premium-card flex h-full flex-col justify-between rounded-[28px] p-5 md:p-6"
                 >
                   <div>

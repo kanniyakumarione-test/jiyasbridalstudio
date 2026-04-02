@@ -50,7 +50,7 @@ const About = () => {
       className="page-shell min-h-screen bg-obsidian px-[5%] pb-16 pt-28 md:pt-32"
     >
       <section className="section-shell overflow-hidden">
-        <div className="grid gap-5 px-5 py-6 md:gap-6 md:px-8 md:py-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-10 lg:py-8">
+        <div className="grid gap-5 px-5 py-6 md:gap-6 md:px-8 md:py-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-start lg:px-10 lg:py-8">
           <div>
             <div className="section-label">
               <Award className="h-4 w-4" />
@@ -79,7 +79,7 @@ const About = () => {
             </div>
           </div>
 
-          <div className="editorial-panel group overflow-hidden rounded-[1.6rem] border border-glass-border sm:rounded-[2rem] lg:max-h-[460px]">
+          <div className="editorial-panel group self-start overflow-hidden rounded-[1.6rem] border border-glass-border sm:rounded-[2rem] lg:max-h-[460px]">
             <div className="relative h-full min-h-[280px] sm:min-h-[340px] lg:min-h-[460px]">
               <div className="absolute left-3 top-3 z-10 rounded-full border border-[rgba(214,177,111,0.25)] bg-black/35 px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-accent backdrop-blur-sm transition-all duration-500 group-hover:border-[rgba(214,177,111,0.42)] group-hover:bg-black/45 lg:left-4 lg:top-4">
                 Founder And Owner
