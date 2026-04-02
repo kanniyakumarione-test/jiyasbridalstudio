@@ -13,7 +13,11 @@ const groupIcons = { women: Sparkles, hair: Scissors, men: Crown };
 const CategoryCard = ({ title, note, image, count, slug }) => (
   <Link to={`/services/${slug}`} className="section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
     <div className="absolute inset-0">
-      <img src={image} alt={title} className="editorial-image opacity-20" />
+      <img
+        src="/logo.png"
+        alt="Jiya's Studio logo"
+        className="h-full w-full object-contain object-center p-4 opacity-16 transition-transform duration-700 group-hover:scale-[1.02]"
+      />
       <div className="editorial-overlay-soft absolute inset-0" />
     </div>
     <div className="relative flex min-h-[220px] flex-col justify-between p-6">
@@ -72,7 +76,11 @@ const OfferCard = ({ title, note, items, strike, offer, image, slug }) => (
   <Motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={fadeInUp}>
     <Link to={`/packages/${slug}`} className="section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
       <div className="absolute inset-0">
-        <img src={image} alt={title} className="editorial-image opacity-28 transition-transform duration-700 group-hover:scale-[1.04]" />
+        <img
+          src="/logo.png"
+          alt="Jiya's Studio logo"
+          className="h-full w-full object-contain object-center p-4 opacity-16 transition-transform duration-700 group-hover:scale-[1.02]"
+        />
         <div className="editorial-overlay-soft absolute inset-0" />
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))]" />
@@ -85,7 +93,7 @@ const OfferCard = ({ title, note, items, strike, offer, image, slug }) => (
             Package
           </div>
         </div>
-        <div>
+        <div className="mt-6 flex flex-1 flex-col">
           <div className="text-sm font-semibold uppercase tracking-[0.32em] text-accent">{title}</div>
           <p className="mt-4 max-w-xl text-base leading-8 text-[#e4d8c2]">{note}</p>
 
@@ -105,20 +113,22 @@ const OfferCard = ({ title, note, items, strike, offer, image, slug }) => (
             ) : null}
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            {strike ? (
-              <div className="rounded-full border border-red-500/35 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 line-through">
-                Rs.{strike}
+          <div className="mt-auto pt-6">
+            <div className="flex flex-wrap items-center gap-4">
+              {strike ? (
+                <div className="rounded-full border border-red-500/35 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 line-through">
+                  Rs.{strike}
+                </div>
+              ) : null}
+              <div className="rounded-full bg-accent px-5 py-2.5 text-lg font-bold text-black shadow-[0_14px_30px_rgba(214,177,111,0.22)]">
+                Rs.{offer}/-
               </div>
-            ) : null}
-            <div className="rounded-full bg-accent px-5 py-2.5 text-lg font-bold text-black shadow-[0_14px_30px_rgba(214,177,111,0.22)]">
-              Rs.{offer}/-
             </div>
-          </div>
 
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-accent">
-            Open Package
-            <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-accent">
+              Open Package
+              <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </div>
           </div>
         </div>
       </div>
@@ -421,10 +431,10 @@ const Services = () => {
 
       {/* WhatsApp booking bar */}
       {selectedServices.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-[999] -translate-x-1/2 w-full max-w-xl flex justify-center">
+        <div className="fixed bottom-6 left-1/2 z-[999] flex w-full max-w-xl -translate-x-1/2 justify-center px-4">
           <Link
             to={`/book-visit?services=${encodeURIComponent(selectedServices.map(s => s.name + ' (' + s.sectionTitle + ')').join(', '))}`}
-            className="whatsapp-btn flex items-center gap-3 rounded-full bg-[#25D366] px-8 py-4 text-lg font-bold uppercase tracking-[0.22em] text-white shadow-xl hover:bg-[#1ebe57] transition-colors"
+            className="whatsapp-btn flex w-full items-center justify-center gap-3 rounded-full bg-[#25D366] px-5 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white shadow-xl transition-colors hover:bg-[#1ebe57] sm:w-auto sm:px-8 sm:py-4 sm:text-lg sm:tracking-[0.22em]"
             target="_blank"
             rel="noopener noreferrer"
           >

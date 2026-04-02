@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 import { AtSign, CalendarClock, Check, Clock3, Mail, MapPin, MessageCircle, Phone, Sparkles } from 'lucide-react';
 import { pageTransition } from '../lib/motion';
+import { buildMapEmbedUrl, buildMapSearchUrl, buildWhatsAppUrl, siteConfig } from '../lib/siteConfig';
 
-const mapQuery = encodeURIComponent("Jiya's Studio Nagercoil");
-const mapEmbedSrc = `https://www.google.com/maps?q=${mapQuery}&z=15&output=embed`;
-const mapDirectionsHref = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+const mapEmbedSrc = buildMapEmbedUrl();
+const mapDirectionsHref = buildMapSearchUrl();
 
 const contactChannels = [
   {
@@ -15,7 +15,7 @@ const contactChannels = [
     title: 'Speak directly for urgent timing changes or bridal planning.',
     body: 'Best for quick confirmations, consultation slots, and schedule updates before your visit.',
     actionLabel: 'Call Now',
-    href: 'tel:+910000000000',
+    href: siteConfig.phoneHref,
   },
   {
     icon: MessageCircle,
@@ -23,7 +23,7 @@ const contactChannels = [
     title: 'Share your preferred date, package, and service list in one message.',
     body: 'Ideal for clients who want fast replies and a simple way to discuss appointment timing.',
     actionLabel: 'Open WhatsApp',
-    href: 'https://wa.me/?text=Hello%20Jiya%27s%20Studio%2C%20I%20want%20to%20ask%20about%20an%20appointment.',
+    href: buildWhatsAppUrl(`Hello ${siteConfig.studioName}, I want to ask about an appointment.`),
   },
   {
     icon: Mail,
@@ -31,7 +31,7 @@ const contactChannels = [
     title: 'Use email for detailed event notes, skin concerns, or first-visit questions.',
     body: 'A good option when you want to explain your requirements clearly before you book.',
     actionLabel: 'Send Email',
-    href: 'mailto:Jiyasbeauty@gmail.com',
+    href: `mailto:${siteConfig.email}`,
   },
 ];
 
@@ -39,7 +39,7 @@ const studioNotes = [
   { icon: CalendarClock, label: 'Studio Days', value: 'Sunday to Saturday' },
   { icon: Clock3, label: 'Opening Hours', value: '9:00 AM to 9:00 PM' },
   { icon: MapPin, label: 'Visit Style', value: 'Walk-ins possible, but premium services are best booked in advance' },
-  { icon: AtSign, label: 'Instagram', value: '@jiyas.unisex.studio' },
+  { icon: AtSign, label: 'Instagram', value: siteConfig.instagramHandle },
 ];
 
 const supportPrompts = [
@@ -94,7 +94,7 @@ const Contact = () => {
                 Book Visit
               </Link>
               <a
-                href="https://wa.me/?text=Hello%20Jiya%27s%20Studio%2C%20I%20need%20help%20with%20a%20service."
+                href={buildWhatsAppUrl(`Hello ${siteConfig.studioName}, I need help with a service.`)}
                 target="_blank"
                 rel="noreferrer"
                 className="interactive-panel rounded-full border border-glass-border bg-white/5 px-6 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-white"
@@ -188,7 +188,7 @@ const Contact = () => {
             <div className="section-shell overflow-hidden p-4 md:p-5">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(214,177,111,0.14),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))]" />
               <div className="relative">
-                <div className="mb-4 flex items-center justify-between gap-4">
+                <div className="mb-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold uppercase tracking-[0.3em] text-accent">Studio Map</div>
                     <h2 className="mt-3 font-heading text-3xl text-white md:text-4xl">Find the studio faster.</h2>

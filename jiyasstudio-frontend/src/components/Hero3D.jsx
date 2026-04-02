@@ -123,20 +123,21 @@ const LogoStack = () => {
   );
 };
 
-const Hero3D = () => {
+const Hero3D = ({ theme = 'dark' }) => {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const pointerQuery = window.matchMedia('(pointer: coarse)');
+    const isSmallTouchViewport = pointerQuery.matches && window.innerWidth < 1024;
 
-    if (mediaQuery.matches || pointerQuery.matches) {
+    if (mediaQuery.matches || isSmallTouchViewport) {
       return undefined;
     }
 
     const timer = window.setTimeout(() => {
       setShouldRender(true);
-    }, 250);
+    }, 120);
 
     return () => window.clearTimeout(timer);
   }, []);
@@ -155,17 +156,18 @@ const Hero3D = () => {
         inset: 0,
         zIndex: 0,
         pointerEvents: 'none',
-        opacity: 0.32,
+        opacity: theme === 'light' ? 0.18 : 0.34,
+        transition: 'opacity 0.35s ease',
       }}
     >
-      <Canvas camera={{ position: [0, 0, 8.5], fov: 42 }} dpr={[1, 1.25]} gl={{ antialias: false, powerPreference: 'low-power' }}>
-        <ambientLight intensity={0.28} />
-        <directionalLight position={[8, 6, 6]} intensity={2.1} color="#ffffff" />
-        <pointLight position={[-6, -4, 4]} intensity={1.1} color="#f2e2c6" />
-        <pointLight position={[0, 2, 6]} intensity={1.4} color="#ffd36b" />
+      <Canvas camera={{ position: [0, 0, 8.5], fov: 42 }} dpr={[1, 1.25]} gl={{ antialias: false, powerPreference: 'high-performance' }}>
+        <ambientLight intensity={theme === 'light' ? 0.4 : 0.28} />
+        <directionalLight position={[8, 6, 6]} intensity={theme === 'light' ? 1.8 : 2.1} color="#ffffff" />
+        <pointLight position={[-6, -4, 4]} intensity={theme === 'light' ? 0.8 : 1.1} color="#f2e2c6" />
+        <pointLight position={[0, 2, 6]} intensity={theme === 'light' ? 1 : 1.4} color="#ffd36b" />
         
-        <Stars radius={70} depth={32} count={900} factor={3} saturation={0} fade speed={0.5} />
-        <Sparkles count={36} scale={12} size={3} speed={0.18} opacity={0.24} color="#D4AF37" />
+        <Stars radius={70} depth={32} count={theme === 'light' ? 520 : 900} factor={3} saturation={0} fade speed={0.5} />
+        <Sparkles count={theme === 'light' ? 20 : 36} scale={12} size={3} speed={0.18} opacity={theme === 'light' ? 0.16 : 0.24} color="#D4AF37" />
         
         <LogoStack />
         

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, LogOut, Plus, Search, Trash2, WandSparkles } from 'lucide-react';
 import { allServiceSections } from '../data/servicesData';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { useNotifications } from '../components/NotificationProvider';
 
 export default function AdminPanel() {
+  const { showToast, confirm } = useNotifications();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
@@ -72,6 +74,7 @@ export default function AdminPanel() {
       setIsAuthenticated(true);
       sessionStorage.setItem('jiya_admin_auth', 'true');
       setLoginError('');
+      showToast('Admin access granted.', { tone: 'success', title: 'Signed In' });
     } else {
       setLoginError('Invalid credentials. Access denied.');
     }
@@ -80,6 +83,7 @@ export default function AdminPanel() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem('jiya_admin_auth');
+    showToast('You have been signed out of the admin panel.', { tone: 'info', title: 'Signed Out' });
   };
 
   const fetchStudents = async () => {
@@ -178,9 +182,10 @@ export default function AdminPanel() {
        setFormValues({ studentName: '', idCardNumber: '', contact: '' });
        setIsEditing(false);
        setCurrentId(null);
+       showToast(isEditing ? 'Student record updated successfully.' : 'Student record saved successfully.', { tone: 'success', title: 'Saved' });
     } catch (err) {
        console.error('Failed saving', err);
-       alert('Failed to save record.');
+       showToast('Failed to save record.', { tone: 'error', title: 'Save Failed' });
     } finally {
        setIsSaving(false);
     }
@@ -198,7 +203,14 @@ export default function AdminPanel() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you certain you wish to delete this record?")) return;
+    const approved = await confirm({
+      title: 'Delete student record?',
+      message: 'This will permanently remove the selected student record from the registry.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Keep',
+      tone: 'danger',
+    });
+    if (!approved) return;
     if (!scriptUrl) return;
     try {
       await fetch(scriptUrl, {
@@ -208,13 +220,22 @@ export default function AdminPanel() {
          body: JSON.stringify({ action: 'delete', id, entity: 'Students' }),
       });
       await fetchStudents();
+      showToast('Student record deleted.', { tone: 'success', title: 'Deleted' });
     } catch (err) {
       setError('Failed to delete student.');
+      showToast('Failed to delete student.', { tone: 'error', title: 'Delete Failed' });
     }
   };
 
   const importServices = async () => {
-    if (!scriptUrl || !window.confirm('This will import all existing website services into your Google Sheet. Continue?')) return;
+    if (!scriptUrl) return;
+    const approved = await confirm({
+      title: 'Import official service menu?',
+      message: 'This will import all existing website services into your Google Sheet. Continue?',
+      confirmLabel: 'Import',
+      cancelLabel: 'Cancel',
+    });
+    if (!approved) return;
     try {
       setIsSaving(true);
       // We'll import them one-by-one or in batches. Since Google Sheets POST is slow, 
@@ -237,10 +258,11 @@ export default function AdminPanel() {
           });
         }
       }
-      alert('Import complete! Refreshing list...');
+      showToast('Import complete. Refreshing the service list now.', { tone: 'success', title: 'Import Finished' });
       await fetchServices();
     } catch (err) {
       setError('Failed to import services.');
+      showToast('Failed to import services.', { tone: 'error', title: 'Import Failed' });
     } finally {
       setIsSaving(false);
     }
@@ -269,8 +291,10 @@ export default function AdminPanel() {
       setIsEditingService(false);
       setCurrentServiceId(null);
       await fetchServices();
+      showToast(isEditingService ? 'Service updated successfully.' : 'Service added successfully.', { tone: 'success', title: 'Saved' });
     } catch (err) {
       setError('Failed to save service.');
+      showToast('Failed to save service.', { tone: 'error', title: 'Save Failed' });
     } finally {
       setIsSaving(false);
     }
@@ -289,7 +313,14 @@ export default function AdminPanel() {
   };
 
   const handleDeleteService = async (id) => {
-    if (!window.confirm('Delete this service?')) return;
+    const approved = await confirm({
+      title: 'Delete service?',
+      message: 'This service entry will be removed from the live admin list.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Keep',
+      tone: 'danger',
+    });
+    if (!approved) return;
     try {
       await fetch(scriptUrl, {
         method: 'POST',
@@ -298,8 +329,10 @@ export default function AdminPanel() {
         body: JSON.stringify({ action: 'delete', id, entity: 'Services' }),
       });
       await fetchServices();
+      showToast('Service deleted.', { tone: 'success', title: 'Deleted' });
     } catch (err) {
       setError('Failed to delete service.');
+      showToast('Failed to delete service.', { tone: 'error', title: 'Delete Failed' });
     }
   };
 
@@ -326,15 +359,24 @@ export default function AdminPanel() {
       setIsEditingPromo(false);
       setCurrentPromoId(null);
       await fetchPromotions();
+      showToast(isEditingPromo ? 'Promotion updated successfully.' : 'Promotion created successfully.', { tone: 'success', title: 'Saved' });
     } catch (err) {
       setError('Failed to save promotion.');
+      showToast('Failed to save promotion.', { tone: 'error', title: 'Save Failed' });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeletePromotion = async (id) => {
-    if (!window.confirm('Delete this promotion?')) return;
+    const approved = await confirm({
+      title: 'Delete promotion?',
+      message: 'This banner will be removed from the promotions list.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Keep',
+      tone: 'danger',
+    });
+    if (!approved) return;
     try {
       await fetch(scriptUrl, {
         method: 'POST',
@@ -343,8 +385,10 @@ export default function AdminPanel() {
         body: JSON.stringify({ action: 'delete', id, entity: 'Promotions' }),
       });
       await fetchPromotions();
+      showToast('Promotion deleted.', { tone: 'success', title: 'Deleted' });
     } catch (err) {
       setError('Failed to delete promotion.');
+      showToast('Failed to delete promotion.', { tone: 'error', title: 'Delete Failed' });
     }
   };
 
@@ -476,6 +520,10 @@ export default function AdminPanel() {
                   >
                     Promotions
                   </button>
+               </div>
+
+               <div className={`mb-8 rounded-[1.4rem] border px-5 py-4 text-sm leading-7 ${isLightTheme ? 'border-black/6 bg-black/[0.02] text-[#5f4a34]' : 'border-white/6 bg-white/[0.02] text-[#d6c9b4]'}`}>
+                 Use this panel for day-to-day updates only. Keep real contact details, live promotions, and service pricing aligned with the public website before handover.
                </div>
 
                {activeTab === 'vouchers' ? (

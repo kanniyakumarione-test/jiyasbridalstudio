@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 import { Calendar, CalendarClock, Check, CheckCircle2, Clock3, LoaderCircle, MapPin, Navigation, Sparkles } from 'lucide-react';
 import { pageTransition } from '../lib/motion';
+import { buildWhatsAppUrl, siteConfig } from '../lib/siteConfig';
 
 const serviceChoices = [
   'Hair Styling',
@@ -176,7 +177,7 @@ const BookVisit = () => {
       .filter(Boolean)
       .join('\n');
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(bookingMessage)}`, '_blank', 'noopener,noreferrer');
+    window.open(buildWhatsAppUrl(bookingMessage), '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -521,7 +522,7 @@ const BookVisit = () => {
                     Open Entered Location In Google Maps
                   </a>
                   <a
-                    href="tel:+910000000000"
+                    href={siteConfig.phoneHref}
                     className="interactive-panel rounded-[1.25rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] px-4 py-4 text-sm font-semibold text-[#ddd1bb]"
                   >
                     Call Studio To Confirm Location Availability
@@ -536,6 +537,8 @@ const BookVisit = () => {
                 <p>Home service depends on selected service type, travel area, and timing availability.</p>
                 <p>Adding landmark details helps the studio confirm the booking faster.</p>
                 <p>For bridal or multi-service requests, contact first if you need schedule guidance before sending.</p>
+                <p>Location details are used only for route review, area confirmation, and appointment coordination.</p>
+                <p>For cancellations or same-day timing changes, contact the studio directly as early as possible.</p>
               </div>
             </div>
 

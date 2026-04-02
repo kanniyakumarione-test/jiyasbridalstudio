@@ -15,10 +15,10 @@ import {
 } from 'lucide-react';
 import Hero3D from '../components/Hero3D';
 import { fadeInUp, staggerContainer } from '../lib/motion';
-import bridalWork1 from '../assets/images/bridal_work_1.jpg';
-import hairWork1 from '../assets/images/hair_work_1.jpg';
-import makeupWork1 from '../assets/images/makeup_work_1.jpg';
-import skinWork1 from '../assets/images/skin_work_1.jpg';
+import bridalWork1 from '../assets/images/bridal-purple-saree-chair-portrait.jpg';
+import hairWork1 from '../assets/images/bridal-red-saree-soft-focus-portrait.jpg';
+import makeupWork1 from '../assets/images/bridal-red-saree-jewelry-closeup.jpg';
+import skinWork1 from '../assets/images/bridal-red-saree-look-collage.jpg';
 
 const signatureCollections = [
   {
@@ -118,10 +118,10 @@ const featuredLooks = [
   },
 ];
 
-const Home = () => {
+const Home = ({ theme = 'dark' }) => {
   return (
     <main className="relative overflow-hidden pt-28 md:pt-32 transition-colors duration-500">
-      <Hero3D />
+      <Hero3D theme={theme} />
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_72%_22%,rgba(212,175,55,0.08),transparent_25%),radial-gradient(circle_at_20%_38%,rgba(255,244,214,0.04),transparent_30%)]" />
       <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-transparent via-black/5 to-black/10 dark:via-black/40 dark:to-black" />
       <section className="px-[5%] pb-8">
@@ -144,7 +144,7 @@ const Home = () => {
 
               <Motion.h1
                 variants={fadeInUp}
-                className="mt-6 max-w-3xl font-heading text-[4.1rem] leading-[0.9] text-primary md:text-[5.6rem] lg:text-[6.3rem] xl:text-[7rem]"
+                className="mt-6 max-w-3xl font-heading text-[3.2rem] leading-[0.92] text-primary sm:text-[4.1rem] md:text-[5.6rem] lg:text-[6.3rem] xl:text-[7rem]"
               >
                 More than a salon.
                 <span className="text-gradient block">A complete beauty destination.</span>
@@ -258,13 +258,13 @@ const Home = () => {
       </section>
 
       <section className="px-[5%] py-10">
-        <div className="section-shell relative z-10 overflow-hidden p-8 md:p-10">
+        <div className="section-shell relative z-10 overflow-hidden p-5 sm:p-8 md:p-10">
           <div className="mb-8">
             <div className="section-label">
               <HeartHandshake className="h-4 w-4" />
               Client Feedback
             </div>
-            <h2 className="mt-5 font-heading text-4xl text-primary md:text-5xl">
+            <h2 className="mt-5 font-heading text-3xl leading-tight text-primary sm:text-4xl md:text-5xl">
               What clients say after the service.
             </h2>
           </div>
@@ -272,8 +272,8 @@ const Home = () => {
           <div className="overflow-hidden px-0 py-2">
             <div className="testimonial-track">
               {testimonialCarousel.map((item, index) => (
-                <div key={`${item.author}-${item.service}-${index}`} className="testimonial-card premium-card p-6">
-                  <div className="flex items-center justify-between gap-4">
+                <div key={`${item.author}-${item.service}-${index}`} className="testimonial-card premium-card p-5 sm:p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-1 text-accent">
                       {Array.from({ length: 5 }).map((_, starIndex) => (
                         <Star key={starIndex} className="h-4 w-4 fill-current" />
@@ -283,7 +283,7 @@ const Home = () => {
                       {item.service}
                     </div>
                   </div>
-                  <p className="mt-6 font-heading text-3xl leading-tight text-primary">&ldquo;{item.quote}&rdquo;</p>
+                  <p className="mt-5 font-heading text-[1.95rem] leading-tight text-primary sm:mt-6 sm:text-3xl">&ldquo;{item.quote}&rdquo;</p>
                   <p className="mt-6 text-sm uppercase tracking-[0.22em] text-[#c8b99d]">{item.author}</p>
                 </div>
               ))}

@@ -323,7 +323,7 @@ export default function Gallery() {
 
   return (
     <>
-      <main className="page-shell relative min-h-screen overflow-hidden px-4 pb-20 pt-28 sm:px-[5%] md:pb-28 md:pt-36">
+      <main className="page-shell relative min-h-screen overflow-hidden px-4 pb-20 pt-36 sm:px-[5%] md:pb-28 md:pt-36">
         <div className="pointer-events-none absolute inset-0 opacity-90">
           <div className="absolute left-[-8%] top-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(214,177,111,0.18),transparent_64%)] blur-3xl" />
           <div className="absolute right-[-10%] top-[28rem] h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_68%)] blur-3xl" />

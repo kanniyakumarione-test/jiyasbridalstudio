@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
+import { useNotifications } from '../components/NotificationProvider';
 
 const FONT_HREF =
   'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400;700&family=Montserrat:wght@100;400;700&display=swap';
@@ -227,6 +228,7 @@ const VoucherSvg = ({ studentName, studentId, studentCode, validity, idPrefix, l
 };
 
 export default function StudentVoucher() {
+  const { showToast } = useNotifications();
   const [formValues, setFormValues] = useState(initialValues);
   const [showVoucher, setShowVoucher] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -422,7 +424,7 @@ export default function StudentVoucher() {
       document.body.removeChild(link);
     } catch (error) {
       console.error('Voucher download failed', error);
-      window.alert('Download failed. Please try again.');
+      showToast('Download failed. Please try again.', { tone: 'error', title: 'Download Failed' });
     } finally {
       setIsDownloading(false);
     }
@@ -430,7 +432,7 @@ export default function StudentVoucher() {
 
   return (
     <div
-      className="min-h-screen bg-[#050505] px-3 pb-6 pt-24 text-white md:px-8 md:pb-10 md:pt-36"
+      className={`${showVoucher ? '' : 'min-h-screen '}bg-[#050505] px-3 pb-3 pt-30 text-white md:px-8 md:pb-10 md:pt-36`}
       style={pageStyle}
     >
       <div className="mx-auto max-w-6xl">
@@ -442,15 +444,15 @@ export default function StudentVoucher() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 1.04 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="mx-auto w-full max-w-lg rounded-[3rem] border border-white/5 bg-[#0f0f0f] p-8 shadow-[0_50px_100px_rgba(0,0,0,0.8)] md:p-12"
+              className="mx-auto w-full max-w-lg rounded-[2.4rem] border border-white/5 bg-[#0f0f0f] p-6 shadow-[0_50px_100px_rgba(0,0,0,0.8)] sm:rounded-[3rem] sm:p-8 md:p-12"
               style={formCardStyle}
             >
-              <div className="mb-12 text-center">
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-[#CBB279]/40 bg-[radial-gradient(circle_at_center,rgba(203,178,121,0.16),rgba(255,255,255,0.02))]">
-                  <img src="/logo.png" alt="Jiya's Studio logo" className="h-12 w-12 object-contain" />
+              <div className="mb-10 text-center sm:mb-12">
+                <div className="mx-auto mb-5 flex h-18 w-18 items-center justify-center rounded-full border border-[#CBB279]/40 bg-[radial-gradient(circle_at_center,rgba(203,178,121,0.16),rgba(255,255,255,0.02))] sm:mb-6 sm:h-20 sm:w-20">
+                  <img src="/logo.png" alt="Jiya's Studio logo" className="h-11 w-11 object-contain sm:h-12 sm:w-12" />
                 </div>
-                <h2 className="mb-4 text-sm uppercase tracking-[0.5em] text-[#CBB279]">Luxury Identity</h2>
-                <h1 className={`text-4xl italic ${isLightTheme ? 'text-[#23180f]' : 'text-white'}`} style={{ fontFamily: "'Bodoni Moda', serif" }}>
+                <h2 className="mb-4 text-[0.72rem] uppercase tracking-[0.38em] text-[#CBB279] sm:text-sm sm:tracking-[0.5em]">Luxury Identity</h2>
+                <h1 className={`text-[2.65rem] italic leading-none sm:text-4xl ${isLightTheme ? 'text-[#23180f]' : 'text-white'}`} style={{ fontFamily: "'Bodoni Moda', serif" }}>
                   Issue Signature Pass
                 </h1>
               </div>
@@ -467,7 +469,7 @@ export default function StudentVoucher() {
                     type="text"
                     value={formValues.studentName}
                     onChange={(e) => handleChange('studentName', e.target.value)}
-                    className={`w-full border-b bg-transparent py-4 text-2xl italic outline-none transition-all placeholder:opacity-20 focus:border-[#CBB279] ${isLightTheme ? 'border-[#bfa57a]/35 text-[#24190f]' : 'border-white/10 text-white'}`}
+                    className={`w-full border-b bg-transparent py-4 text-2xl italic outline-none transition-all focus:border-[#CBB279] ${isLightTheme ? 'border-[#bfa57a]/35 text-[#24190f] placeholder:text-[#9f8a70] placeholder:opacity-100' : 'border-white/10 text-white placeholder:text-white/20'}`}
                     style={{ fontFamily: "'Bodoni Moda', serif" }}
                     placeholder="Full Legal Name"
                   />
@@ -478,7 +480,7 @@ export default function StudentVoucher() {
                     type="text"
                     value={formValues.idCardNumber}
                     onChange={(e) => handleChange('idCardNumber', e.target.value)}
-                    className={`w-full border-b bg-transparent py-4 text-xl font-light outline-none transition-all placeholder:opacity-20 focus:border-[#CBB279] ${isLightTheme ? 'border-[#bfa57a]/35 text-[#24190f]' : 'border-white/10 text-white'}`}
+                    className={`w-full border-b bg-transparent py-4 text-xl font-light outline-none transition-all focus:border-[#CBB279] ${isLightTheme ? 'border-[#bfa57a]/35 text-[#24190f] placeholder:text-[#9f8a70] placeholder:opacity-100' : 'border-white/10 text-white placeholder:text-white/20'}`}
                     style={{ fontFamily: "'Montserrat', sans-serif" }}
                     placeholder="Student ID"
                   />
@@ -489,9 +491,9 @@ export default function StudentVoucher() {
                     type="tel"
                     value={formValues.contact}
                     onChange={(e) => handleChange('contact', e.target.value)}
-                    className={`w-full border-b bg-transparent py-4 text-xl font-light outline-none transition-all placeholder:opacity-20 focus:border-[#CBB279] ${isLightTheme ? 'border-[#bfa57a]/35 text-[#24190f]' : 'border-white/10 text-white'}`}
+                    className={`w-full border-b bg-transparent py-4 text-xl font-light outline-none transition-all focus:border-[#CBB279] ${isLightTheme ? 'border-[#bfa57a]/35 text-[#24190f] placeholder:text-[#9f8a70] placeholder:opacity-100' : 'border-white/10 text-white placeholder:text-white/20'}`}
                     style={{ fontFamily: "'Montserrat', sans-serif" }}
-                    placeholder="Contact Number (Admin Only)"
+                    placeholder="Contact Number"
                   />
                 </div>
 
@@ -533,13 +535,13 @@ export default function StudentVoucher() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="space-y-5 md:space-y-8"
+              className="space-y-4 pt-8 md:space-y-8 md:pt-0"
               style={previewStyle}
             >
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="text-[0.72rem] uppercase tracking-[0.4em] text-[#CBB279]">Signature Preview</div>
-                  <h2 className="mt-1 text-[2rem] italic leading-none md:mt-2 md:text-5xl" style={previewTitleStyle}>
+                  <h2 className="mt-1 text-[2.25rem] italic leading-none md:mt-2 md:text-5xl" style={previewTitleStyle}>
                     Luxury Voucher Ready
                   </h2>
                 </div>

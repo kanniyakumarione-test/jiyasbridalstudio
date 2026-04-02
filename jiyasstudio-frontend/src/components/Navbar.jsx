@@ -358,13 +358,13 @@ const Navbar = ({ theme, onToggleTheme }) => {
             className="fixed inset-x-0 top-[7.25rem] z-[105] mx-auto w-[94%] max-w-[1440px] xl:hidden"
           >
             <div
-              className={`premium-card rounded-[1.75rem] p-5 xl:bg-transparent ${
+              className={`premium-card rounded-[1.75rem] px-5 pb-5 pt-6 xl:bg-transparent ${
                 isDarkTheme
                   ? 'bg-[linear-gradient(180deg,rgba(16,13,10,0.97),rgba(11,9,7,0.95))]'
                   : 'border-[rgba(214,177,111,0.18)] bg-[linear-gradient(180deg,rgba(255,250,243,0.98),rgba(249,241,229,0.96))] shadow-[0_18px_48px_rgba(113,84,34,0.14)]'
               }`}
             >
-              <div className="mb-4 text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-accent">Explore</div>
+              <div className="mt-3 mb-5 text-[0.62rem] font-semibold uppercase tracking-[0.28em] text-accent">Explore</div>
               <div className="grid gap-3">
                 {mobileMenuItems.map((item) => (
                   <Link

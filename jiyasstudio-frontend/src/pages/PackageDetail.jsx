@@ -4,11 +4,12 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeIndianRupee, Check, MessageCircle, TicketPercent } from 'lucide-react';
 import { findPackageBySlug } from '../data/servicesData';
 import { pageTransition } from '../lib/motion';
+import { buildWhatsAppUrl, siteConfig } from '../lib/siteConfig';
 
 const wa = (title, items, offer) =>
-  `https://wa.me/?text=${encodeURIComponent(
+  buildWhatsAppUrl(
     `Hello Jiya's Studio, I want to book ${title} for Rs.${offer}/-. Inclusions: ${items.join(', ')}. Please share availability.`,
-  )}`;
+  );
 
 const PackageDetail = () => {
   const { slug } = useParams();
@@ -88,6 +89,9 @@ const PackageDetail = () => {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(214,177,111,0.14)] px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] text-accent md:text-base">
               <BadgeIndianRupee className="h-4 w-4" />
               Offer Price {pkg.offer}
+            </div>
+            <div className="text-sm leading-7 text-[#d7c8b3]">
+              Need to reschedule or cancel? Please contact {siteConfig.shortName} directly as early as possible.
             </div>
           </div>
         </div>

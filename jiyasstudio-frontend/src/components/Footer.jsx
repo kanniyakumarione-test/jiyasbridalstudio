@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, AtSign, CalendarClock, MapPin, Phone, Sparkles } from 'lucide-react';
+import { siteConfig } from '../lib/siteConfig';
 
 const quickLinks = [
   ['Home', '/'],
@@ -100,15 +101,17 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-accent" />
-                  <span>Call for bookings, event timelines, and premium service guidance.</span>
+                  <span>{siteConfig.phoneDisplay}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CalendarClock className="h-4 w-4 text-accent" />
-                  <span>Sunday to Saturday, 9:00 AM to 9:00 PM</span>
+                  <span>{siteConfig.serviceHours}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <AtSign className="h-4 w-4 text-accent" />
-                  <span>@jiyas.unisex.studio</span>
+                  <a href={siteConfig.instagramUrl} target="_blank" rel="noreferrer" className="transition-colors duration-300 hover:text-accent">
+                    {siteConfig.instagramHandle}
+                  </a>
                 </div>
               </div>
             </div>
@@ -117,7 +120,7 @@ const Footer = () => {
           <div className="mt-8 flex flex-col gap-3 border-t border-glass-border pt-6 text-sm text-[#b8a98f] md:flex-row md:items-center md:justify-between">
             <p>&copy; {new Date().getFullYear()} Jiya&apos;s Studio.</p>
             <a
-              href="https://services.kanniyakumarione.com/"
+              href={siteConfig.developersUrl}
               target="_blank"
               rel="noreferrer"
               className="transition-colors duration-300 hover:text-accent"
