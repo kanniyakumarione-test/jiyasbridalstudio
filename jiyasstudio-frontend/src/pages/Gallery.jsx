@@ -1,15 +1,34 @@
-import React, { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import React, { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Aperture, ArrowLeft, ArrowRight, ArrowUpRight, Image as ImageIcon, Play, X } from 'lucide-react';
 import { useGesture } from '@use-gesture/react';
 import { hasRemoteGalleryMediaConfig, loadGalleryMedia } from '../data/galleryMedia';
+import { usePerformanceProfile } from '../lib/performance';
+import Loader from '../components/Loader';
 
 const INITIAL_IMAGE_COUNT = 4;
 const INITIAL_VIDEO_COUNT = 3;
 
-function GalleryPreviewMedia({ item, className = '' }) {
+const preloadImage = (src) =>
+  new Promise((resolve) => {
+    if (!src) {
+      resolve();
+      return;
+    }
+
+    const image = new Image();
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = src;
+  });
+
+const getPreviewSource = (item) => item?.previewSrc ?? item?.posterSrc ?? item?.src ?? '';
+
+function GalleryPreviewMedia({ item, className = '', allowAutoplayVideo = true }) {
   const containerRef = useRef(null);
+  const videoRef = useRef(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (item.type !== 'video') return undefined;
@@ -21,8 +40,8 @@ function GalleryPreviewMedia({ item, className = '' }) {
       ([entry]) => {
         if (entry.isIntersecting) {
           setShouldLoadVideo(true);
-          observer.disconnect();
         }
+        setIsVisible(entry.isIntersecting);
       },
       {
         rootMargin: '180px 0px',
@@ -37,6 +56,22 @@ function GalleryPreviewMedia({ item, className = '' }) {
     };
   }, [item.id, item.type]);
 
+  useEffect(() => {
+    if (item.type !== 'video' || !videoRef.current) return undefined;
+
+    const videoElement = videoRef.current;
+    const shouldAutoplay = shouldLoadVideo && isVisible && allowAutoplayVideo && document.visibilityState === 'visible';
+
+    if (shouldAutoplay) {
+      const playAttempt = videoElement.play();
+      playAttempt?.catch(() => {});
+      return undefined;
+    }
+
+    videoElement.pause();
+    return undefined;
+  }, [allowAutoplayVideo, isVisible, item.type, shouldLoadVideo]);
+
   if (item.type === 'video') {
     const previewImageSrc = item.previewSrc || item.posterSrc;
 
@@ -44,14 +79,14 @@ function GalleryPreviewMedia({ item, className = '' }) {
       <div ref={containerRef} className={className}>
         {shouldLoadVideo ? (
           <video
+            ref={videoRef}
             src={item.src}
             poster={item.posterSrc}
             className="h-full w-full object-cover"
-            autoPlay
             muted
             loop
             playsInline
-            preload="none"
+            preload="metadata"
           />
         ) : previewImageSrc ? (
           <img
@@ -88,8 +123,10 @@ function GalleryPreviewMedia({ item, className = '' }) {
 }
 
 export default function Gallery() {
+  const performanceProfile = usePerformanceProfile();
   const [galleryMedia, setGalleryMedia] = useState({ imageItems: [], videoItems: [], mediaItems: [] });
   const [isMediaLoading, setIsMediaLoading] = useState(true);
+  const [isGalleryReady, setIsGalleryReady] = useState(false);
   const [visibleImages, setVisibleImages] = useState(INITIAL_IMAGE_COUNT);
   const [visibleVideos, setVisibleVideos] = useState(INITIAL_VIDEO_COUNT);
   const [lightboxItem, setLightboxItem] = useState(null);
@@ -100,6 +137,7 @@ export default function Gallery() {
 
     async function hydrateGallery() {
       setIsMediaLoading(true);
+      setIsGalleryReady(false);
 
       try {
         const nextGalleryMedia = await loadGalleryMedia();
@@ -153,21 +191,21 @@ export default function Gallery() {
   );
   const lightboxImageIndex = lightboxItem?.type === 'image' ? imageIndexById.get(lightboxItem.id) ?? -1 : -1;
 
-  const openPreviousImage = () => {
+  const openPreviousImage = useCallback(() => {
     if (lightboxImageIndex < 0 || filteredImages.length < 2) return;
     const previousIndex = (lightboxImageIndex - 1 + filteredImages.length) % filteredImages.length;
     startTransition(() => {
       setLightboxItem(filteredImages[previousIndex]);
     });
-  };
+  }, [filteredImages, lightboxImageIndex]);
 
-  const openNextImage = () => {
+  const openNextImage = useCallback(() => {
     if (lightboxImageIndex < 0 || filteredImages.length < 2) return;
     const nextIndex = (lightboxImageIndex + 1) % filteredImages.length;
     startTransition(() => {
       setLightboxItem(filteredImages[nextIndex]);
     });
-  };
+  }, [filteredImages, lightboxImageIndex]);
 
   useEffect(() => {
     if (lightboxImageIndex < 0 || filteredImages.length < 2) return undefined;
@@ -226,6 +264,42 @@ export default function Gallery() {
   }, [activeItemId, featuredItem, filteredMedia]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function warmGalleryEntryAssets() {
+      if (isMediaLoading) return;
+
+      const aboveTheFoldSources = [
+        getPreviewSource(featuredItem),
+        ...lookbookStrip.slice(0, 4).map(getPreviewSource),
+        ...visibleImageItems.map(getPreviewSource),
+        ...visibleVideoItems.map(getPreviewSource),
+      ].filter(Boolean);
+
+      const uniqueSources = [...new Set(aboveTheFoldSources)];
+
+      if (!uniqueSources.length) {
+        if (!cancelled) {
+          setIsGalleryReady(true);
+        }
+        return;
+      }
+
+      await Promise.all(uniqueSources.map(preloadImage));
+
+      if (!cancelled) {
+        setIsGalleryReady(true);
+      }
+    }
+
+    warmGalleryEntryAssets();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [featuredItem, isMediaLoading, lookbookStrip, visibleImageItems, visibleVideoItems]);
+
+  useEffect(() => {
     if (lightboxItem) {
       document.documentElement.style.overflow = 'hidden';
       document.documentElement.style.overscrollBehavior = 'none';
@@ -263,7 +337,7 @@ export default function Gallery() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [lightboxItem, lightboxImageIndex, filteredImages]);
+  }, [lightboxItem, openNextImage, openPreviousImage]);
 
   const lightboxMarkup =
     lightboxItem && typeof document !== 'undefined'
@@ -356,7 +430,8 @@ export default function Gallery() {
 
   return (
     <>
-      <main className="page-shell relative min-h-screen overflow-hidden px-4 pb-20 pt-36 sm:px-[5%] md:pb-28 md:pt-36">
+      {!isGalleryReady ? <Loader /> : null}
+      <main className="page-shell gallery-page relative min-h-screen overflow-hidden px-4 pb-20 pt-36 sm:px-[5%] md:pb-28 md:pt-36">
         <div className="pointer-events-none absolute inset-0 opacity-90">
           <div className="absolute left-[-8%] top-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(214,177,111,0.18),transparent_64%)] blur-3xl" />
           <div className="absolute right-[-10%] top-[28rem] h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_68%)] blur-3xl" />
@@ -364,12 +439,6 @@ export default function Gallery() {
         </div>
 
       <section className="relative mx-auto max-w-7xl">
-        {isMediaLoading ? (
-          <div className="section-shell rounded-[2rem] p-8 text-sm text-[#eadfcb]/72 md:rounded-[2.4rem] md:p-10">
-            Loading gallery media...
-          </div>
-        ) : null}
-
         {!isMediaLoading && hasRemoteGalleryMediaConfig && !filteredMedia.length ? (
           <div className="section-shell rounded-[2rem] p-8 text-sm leading-7 text-[#eadfcb]/72 md:rounded-[2.4rem] md:p-10">
             Remote gallery mode is enabled, but no media URLs could be generated. Add your Cloudinary image settings and video CDN settings in
@@ -385,12 +454,12 @@ export default function Gallery() {
             </div>
 
             <div className="max-w-3xl">
-              <p className="text-[0.68rem] uppercase tracking-[0.38em] text-accent/80 md:text-[0.72rem]">Jiya&apos;s Studio Visual Edit</p>
-              <h1 className="mt-4 font-heading text-[3.1rem] leading-[0.88] tracking-[-0.05em] text-white sm:text-[4.2rem] md:text-[5.3rem] xl:text-[6.8rem]">
+              <p className="gallery-eyebrow text-[0.68rem] uppercase tracking-[0.38em] text-accent/80 md:text-[0.72rem]">Jiya&apos;s Studio Visual Edit</p>
+              <h1 className="gallery-display-title mt-4 font-heading text-[3.1rem] leading-[0.88] tracking-[-0.05em] text-white sm:text-[4.2rem] md:text-[5.3rem] xl:text-[6.8rem]">
                 Cleaner,
-                <span className="block pl-0 italic text-accent sm:pl-6 md:pl-10 xl:pl-16">sharper, more premium.</span>
+                <span className="gallery-display-accent block pl-0 italic text-accent sm:pl-6 md:pl-10 xl:pl-16">sharper, more premium.</span>
               </h1>
-              <p className="mt-5 max-w-2xl text-sm leading-7 text-[#e7dece]/75 sm:text-base md:text-lg md:leading-8">
+              <p className="gallery-lead-copy mt-5 max-w-2xl text-sm leading-7 text-[#e7dece]/75 sm:text-base md:text-lg md:leading-8">
                 The gallery now feels closer to a fashion-led lookbook instead of an old image dump, with stronger hierarchy, better spacing,
                 and a more polished first impression across photos and videos.
               </p>
@@ -405,12 +474,12 @@ export default function Gallery() {
                 className="group relative block w-full overflow-hidden rounded-[1.7rem] text-left md:rounded-[2.2rem]"
               >
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[1.7rem] md:rounded-[2.2rem]">
-                  <GalleryPreviewMedia item={featuredItem} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+                  <GalleryPreviewMedia item={featuredItem} allowAutoplayVideo={performanceProfile.allowAutoplayVideo} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
 
                   <div className="gallery-hero-overlay absolute inset-0" />
 
                   <div className="absolute inset-x-4 top-4 flex items-start justify-between md:inset-x-8 md:top-8">
-                    <div className="max-w-[8rem] text-[0.58rem] uppercase tracking-[0.35em] text-white/44 md:max-w-[9rem] md:text-[0.68rem] md:tracking-[0.42em]">
+                    <div className="gallery-hero-meta max-w-[8rem] text-[0.58rem] uppercase tracking-[0.35em] text-white/44 md:max-w-[9rem] md:text-[0.68rem] md:tracking-[0.42em]">
                       Signature highlight
                     </div>
                     <div className="gallery-tag rounded-full border border-white/10 px-3 py-2 text-[0.58rem] font-bold uppercase tracking-[0.24em] text-accent/80 backdrop-blur-md md:text-[0.64rem]">
@@ -418,21 +487,12 @@ export default function Gallery() {
                     </div>
                   </div>
 
-                  <div className="absolute left-4 top-20 flex flex-wrap items-center gap-2.5 md:left-8 md:top-28 md:gap-3">
-                    <span className="gallery-tag rounded-full border border-white/15 px-3 py-2 text-[0.56rem] font-bold uppercase tracking-[0.22em] text-white/85 backdrop-blur-md md:text-[0.62rem] md:tracking-[0.28em]">
-                      {featuredItem.category}
-                    </span>
-                    <span className="gallery-tag rounded-full border border-white/15 px-3 py-2 text-[0.56rem] font-bold uppercase tracking-[0.22em] text-white/85 backdrop-blur-md md:text-[0.62rem] md:tracking-[0.28em]">
-                      {featuredItem.type === 'video' ? 'Video' : 'Image'}
-                    </span>
-                  </div>
-
                   <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 md:p-8">
                     <div className="flex items-end justify-between gap-4">
                       <div>
-                        <div className="text-[0.62rem] uppercase tracking-[0.3em] text-accent/80 md:text-[0.7rem] md:tracking-[0.38em]">Cover Story</div>
-                        <h2 className="mt-3 max-w-xl font-heading text-3xl leading-[0.92] text-white sm:text-4xl md:text-[3.6rem]">{featuredItem.title}</h2>
-                        <p className="mt-3 max-w-lg text-sm leading-6 text-[#f0e7d8]/78 md:mt-4 md:text-base md:leading-7">{featuredItem.description}</p>
+                        <div className="gallery-cover-label text-[0.62rem] uppercase tracking-[0.3em] text-accent/80 md:text-[0.7rem] md:tracking-[0.38em]">Cover Story</div>
+                        <h2 className="gallery-cover-title mt-3 max-w-xl font-heading text-3xl leading-[0.92] text-white sm:text-4xl md:text-[3.6rem]">{featuredItem.title}</h2>
+                        <p className="gallery-cover-copy mt-3 max-w-lg text-sm leading-6 text-[#f0e7d8]/78 md:mt-4 md:text-base md:leading-7">{featuredItem.description}</p>
                       </div>
                       <div className="hidden h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-md transition-transform duration-500 group-hover:scale-105 md:flex">
                         {featuredItem.type === 'video' ? <Play className="h-5 w-5 fill-white" /> : <ArrowUpRight className="h-5 w-5" />}
@@ -450,13 +510,13 @@ export default function Gallery() {
         <div className="section-shell rounded-[2rem] px-4 py-5 md:rounded-[2.3rem] md:px-6">
           <div className="mb-5">
             <div>
-              <p className="text-[0.68rem] uppercase tracking-[0.34em] text-accent/80 md:text-[0.72rem] md:tracking-[0.38em]">Lookbook Strip</p>
-              <h3 className="mt-2 font-heading text-3xl text-white">Slow moving gallery rail</h3>
+              <p className="gallery-eyebrow text-[0.68rem] uppercase tracking-[0.34em] text-accent/80 md:text-[0.72rem] md:tracking-[0.38em]">Lookbook Strip</p>
+              <h3 className="gallery-section-title mt-2 font-heading text-3xl text-white">Slow moving gallery rail</h3>
             </div>
           </div>
 
           <div className="overflow-hidden">
-            <div className="flex w-max gap-4 [animation:marquee-scroll_38s_linear_infinite] hover:[animation-play-state:paused]">
+            <div className={`flex w-max gap-4 ${performanceProfile.allowAmbientMotion ? '[animation:marquee-scroll_38s_linear_infinite] hover:[animation-play-state:paused]' : 'flex-wrap'}`}>
             {[...lookbookStrip, ...lookbookStrip].map((item, index) => {
               const isActive = featuredItem?.id === item.id;
 
@@ -471,11 +531,11 @@ export default function Gallery() {
                       : 'border-white/10 hover:border-white/25'
                   }`}
                 >
-                  <GalleryPreviewMedia item={item} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+                  <GalleryPreviewMedia item={item} allowAutoplayVideo={performanceProfile.allowAutoplayVideo} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.78))]" />
                   <div className="absolute inset-x-0 bottom-0 p-4">
-                    <div className="text-[0.62rem] uppercase tracking-[0.32em] text-accent/80">Look {item.indexLabel}</div>
-                    <div className="mt-2 font-heading text-2xl leading-none text-white">{item.title}</div>
+                    <div className="gallery-image-tile-label text-[0.62rem] uppercase tracking-[0.32em] text-accent/80">Look {item.indexLabel}</div>
+                    <div className="gallery-image-tile-title mt-2 font-heading text-2xl leading-none text-white">{item.title}</div>
                   </div>
                 </button>
               );
@@ -488,8 +548,8 @@ export default function Gallery() {
       <section className="mx-auto mt-14 max-w-7xl">
         <div className="mb-5">
           <div>
-            <p className="text-[0.7rem] uppercase tracking-[0.34em] text-accent/80">Photos</p>
-            <h2 className="mt-2 font-heading text-3xl text-white md:text-4xl">Image Gallery</h2>
+            <p className="gallery-eyebrow text-[0.7rem] uppercase tracking-[0.34em] text-accent/80">Photos</p>
+            <h2 className="gallery-section-title mt-2 font-heading text-3xl text-white md:text-4xl">Image Gallery</h2>
           </div>
         </div>
 
@@ -512,11 +572,11 @@ export default function Gallery() {
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.02),rgba(0,0,0,0.78))]" />
                   <div className="absolute inset-x-0 bottom-0 p-4">
-                    <div className="inline-flex items-center gap-2 text-[0.6rem] uppercase tracking-[0.22em] text-accent/80">
-                      <ImageIcon className="h-3.5 w-3.5" />
-                      Image
-                    </div>
-                    <h3 className="mt-2 font-heading text-[1.7rem] leading-none text-white md:text-[1.9rem]">{item.title}</h3>
+                      <div className="gallery-image-tile-label inline-flex items-center gap-2 text-[0.6rem] uppercase tracking-[0.22em] text-accent/80">
+                        <ImageIcon className="h-3.5 w-3.5" />
+                        Image
+                      </div>
+                      <h3 className="gallery-image-tile-title mt-2 font-heading text-[1.7rem] leading-none text-white md:text-[1.9rem]">{item.title}</h3>
                   </div>
                 </div>
               </button>
@@ -544,8 +604,8 @@ export default function Gallery() {
       <section className="mx-auto mt-14 max-w-7xl">
         <div className="mb-5">
           <div>
-            <p className="text-[0.7rem] uppercase tracking-[0.34em] text-accent/80">Videos</p>
-            <h2 className="mt-2 font-heading text-3xl text-white md:text-4xl">Video Gallery</h2>
+            <p className="gallery-eyebrow text-[0.7rem] uppercase tracking-[0.34em] text-accent/80">Videos</p>
+            <h2 className="gallery-section-title mt-2 font-heading text-3xl text-white md:text-4xl">Video Gallery</h2>
           </div>
         </div>
 
@@ -559,15 +619,15 @@ export default function Gallery() {
                 className="group overflow-hidden rounded-[1.45rem] border border-white/10 bg-white/[0.02] text-left transition-all hover:-translate-y-1 hover:border-accent/35"
               >
                 <div className="relative aspect-video overflow-hidden">
-                  <GalleryPreviewMedia item={item} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                  <GalleryPreviewMedia item={item} allowAutoplayVideo={performanceProfile.allowAutoplayVideo} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.78))]" />
                   <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4">
                     <div>
-                      <div className="inline-flex items-center gap-2 text-[0.6rem] uppercase tracking-[0.22em] text-accent/80">
+                      <div className="gallery-image-tile-label inline-flex items-center gap-2 text-[0.6rem] uppercase tracking-[0.22em] text-accent/80">
                         <Play className="h-3.5 w-3.5 fill-current" />
                         Video
                       </div>
-                      <h3 className="mt-2 font-heading text-2xl leading-none text-white">{item.title}</h3>
+                      <h3 className="gallery-image-tile-title mt-2 font-heading text-2xl leading-none text-white">{item.title}</h3>
                     </div>
                     <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white">
                       <Play className="h-4 w-4 fill-white" />

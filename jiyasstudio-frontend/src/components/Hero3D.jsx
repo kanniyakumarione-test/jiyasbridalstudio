@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Stars, Environment, Sparkles, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { getPerformanceProfile } from '../lib/performance';
 
 const LogoStack = () => {
   const groupRef = useRef();
@@ -129,14 +130,9 @@ const Hero3D = ({ theme = 'dark' }) => {
   useEffect(() => {
     const webglCanvas = document.createElement('canvas');
     const hasWebGL = Boolean(webglCanvas.getContext('webgl') || webglCanvas.getContext('experimental-webgl'));
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const pointerQuery = window.matchMedia('(pointer: coarse)');
-    const isSmallTouchViewport = pointerQuery.matches && window.innerWidth < 1024;
-    const lowPowerDevice =
-      (typeof navigator !== 'undefined' && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 6) ||
-      (typeof navigator !== 'undefined' && navigator.deviceMemory && navigator.deviceMemory <= 6);
+    const { allowHeavyEffects } = getPerformanceProfile();
 
-    if (!hasWebGL || mediaQuery.matches || isSmallTouchViewport || lowPowerDevice) {
+    if (!hasWebGL || !allowHeavyEffects) {
       return undefined;
     }
 

@@ -14,7 +14,7 @@ const matchText = (section, query) => !query || [section.title, section.note, ..
 
 const groupIcons = { women: Sparkles, hair: Scissors, men: Crown };
 
-const CategoryCard = ({ title, note, image, count, slug }) => (
+const CategoryCard = ({ title, note, count, slug }) => (
   <Link to={`/services/${slug}`} className="section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
     <div className="absolute inset-0">
       <img
@@ -77,7 +77,7 @@ const FilterDropdown = ({ label, value, options, onChange }) => {
 };
 
 const OfferCardBody = ({ title, note, items, strike, offer, slug }) => (
-  <Link to={`/packages/${slug}`} className="section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
+  <Link to={`/packages/${slug}`} className="services-offer-card section-shell interactive-panel editorial-panel group block overflow-hidden text-left">
     <div className="absolute inset-0">
       <img
         src="/logo.png"
@@ -86,49 +86,49 @@ const OfferCardBody = ({ title, note, items, strike, offer, slug }) => (
       />
       <div className="editorial-overlay-soft absolute inset-0" />
     </div>
-    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))]" />
-    <div className="relative flex min-h-[320px] flex-col justify-between p-6 md:p-7">
+    <div className="services-offer-card-overlay absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.82))]" />
+    <div className="relative flex min-h-[360px] flex-col p-6 md:min-h-[380px] md:p-7">
       <div className="flex items-start justify-between gap-4">
-        <div className="rounded-full border border-[rgba(214,177,111,0.24)] bg-[rgba(214,177,111,0.12)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">
+        <div className="services-offer-pill rounded-full border border-[rgba(214,177,111,0.24)] bg-[rgba(214,177,111,0.12)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">
           {items.length} Inclusions
         </div>
-        <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#eadfc9]">
+        <div className="services-offer-pill rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[#eadfc9]">
           Package
         </div>
       </div>
       <div className="mt-6 flex flex-1 flex-col">
-        <div className="text-sm font-semibold uppercase tracking-[0.32em] text-accent">{title}</div>
-        <p className="mt-4 max-w-xl text-base leading-8 text-[#e4d8c2]">{note}</p>
+        <div className="services-offer-title text-sm font-semibold uppercase tracking-[0.32em] text-accent">{title}</div>
+        <p className="services-offer-copy mt-4 max-w-xl text-base leading-8 text-[#e4d8c2]">{note}</p>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="services-offer-chip-row mt-5 flex min-h-[5.5rem] flex-wrap content-start gap-2">
           {items.slice(0, 3).map((item) => (
             <span
               key={item}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]"
+              className="services-offer-chip rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]"
             >
               {item}
             </span>
           ))}
           {items.length > 3 ? (
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]">
+            <span className="services-offer-chip rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-[#ddd0bb]">
               +{items.length - 3} More
             </span>
           ) : null}
         </div>
 
         <div className="mt-auto pt-6">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="services-offer-price-row flex min-h-[3.9rem] flex-wrap items-center gap-4">
             {strike ? (
-              <div className="rounded-full border border-red-500/35 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 line-through">
+              <div className="services-offer-strike rounded-full border border-red-500/35 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 line-through">
                 Rs.{strike}
               </div>
             ) : null}
-            <div className="rounded-full bg-accent px-5 py-2.5 text-lg font-bold text-black shadow-[0_14px_30px_rgba(214,177,111,0.22)]">
+            <div className="services-offer-price rounded-full bg-accent px-5 py-2.5 text-lg font-bold text-black shadow-[0_14px_30px_rgba(214,177,111,0.22)]">
               Rs.{offer}/-
             </div>
           </div>
 
-          <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-accent">
+          <div className="services-offer-link mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-accent">
             Open Package
             <ChevronRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </div>
@@ -271,13 +271,6 @@ const Services = () => {
     });
   };
 
-  // WhatsApp message builder
-  const getWhatsAppMessage = () => {
-    if (!selectedServices.length) return '';
-    const list = selectedServices.map((s, i) => `${i + 1}. ${s.name} (${s.sectionTitle})`).join('%0A');
-    return `Hi, I would like to book the following services:%0A${list}`;
-  };
-
   const categoryOptions = [
     { value: 'all', label: 'All categories' },
     { value: 'women', label: "Women's services" },
@@ -363,7 +356,7 @@ const Services = () => {
       initial={reduceMotion ? false : 'initial'}
       animate={reduceMotion ? undefined : 'animate'}
       exit={reduceMotion ? undefined : 'exit'}
-      className="page-shell min-h-screen px-[5%] pb-16 pt-32 transition-colors duration-500"
+      className="services-page page-shell min-h-screen px-[5%] pb-16 pt-32 transition-colors duration-500"
     >
       <section className="section-shell interactive-panel editorial-panel overflow-hidden">
         <div className="absolute inset-0">

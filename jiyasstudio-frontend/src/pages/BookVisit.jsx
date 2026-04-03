@@ -186,7 +186,7 @@ const BookVisit = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="page-shell min-h-screen px-[5%] pb-16 pt-32"
+      className="bookvisit-page page-shell min-h-screen px-[5%] pb-16 pt-32"
     >
       <section className="section-shell interactive-panel editorial-panel overflow-hidden">
         <div className="absolute inset-0">
@@ -441,7 +441,7 @@ const BookVisit = () => {
                 </p>
               </label>
 
-              <div className="premium-card p-5 md:p-6">
+              <div className="bookvisit-review premium-card p-5 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <div className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-accent">Review Before Sending</div>
@@ -457,31 +457,39 @@ const BookVisit = () => {
                 </div>
 
                 {isReviewOpen ? (
-                  <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-                    <div className="grid gap-3 md:grid-cols-2">
+                  <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] xl:items-stretch">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {bookingSummary.map(([label, value]) => (
-                        <div key={label} className="rounded-[1.15rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] px-4 py-4">
+                        <div
+                          key={label}
+                          className={`bookvisit-review-card rounded-[1.15rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] px-4 py-4 ${
+                            label === 'Services' || label === 'Service' ? 'sm:col-span-2' : ''
+                          }`}
+                        >
                           <div className="text-[0.62rem] font-semibold uppercase tracking-[0.26em] text-accent">{label}</div>
-                          <div className="mt-2 text-sm leading-7 text-[#eadfcb]">{value}</div>
+                          <div className="bookvisit-review-value mt-2 text-sm leading-7 text-[#eadfcb]">{value}</div>
                         </div>
                       ))}
                       {detectedLocationText ? (
-                        <div className="rounded-[1.15rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] px-4 py-4 md:col-span-2">
+                        <div className="bookvisit-review-card rounded-[1.15rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] px-4 py-4 sm:col-span-2">
                           <div className="text-[0.62rem] font-semibold uppercase tracking-[0.26em] text-accent">Live Location</div>
-                          <div className="mt-2 text-sm leading-7 text-[#eadfcb]">Shared as a Google Maps link for easier route confirmation.</div>
+                          <div className="bookvisit-review-value mt-2 text-sm leading-7 text-[#eadfcb]">Shared as a Google Maps link for easier route confirmation.</div>
                         </div>
                       ) : null}
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                      <div className="inline-flex items-center gap-2 text-sm leading-7 text-[#cfc2ad]">
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                        Request is ready to send.
+                    <div className="bookvisit-review-action flex flex-col justify-between gap-4 rounded-[1.35rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] p-5">
+                      <div>
+                        <div className="text-[0.62rem] font-semibold uppercase tracking-[0.26em] text-accent">Request Status</div>
+                        <div className="mt-3 inline-flex items-center gap-2 text-sm leading-7 text-[#cfc2ad]">
+                          <CheckCircle2 className="h-4 w-4 text-accent" />
+                          Request is ready to send.
+                        </div>
                       </div>
                       <button
                         type="button"
                         onClick={handleWhatsAppBooking}
-                        className="interactive-panel rounded-full bg-accent px-7 py-4 text-sm font-bold uppercase tracking-[0.24em] text-black"
+                        className="interactive-panel w-full rounded-full bg-accent px-7 py-4 text-sm font-bold uppercase tracking-[0.24em] text-black"
                       >
                         Send Booking On WhatsApp
                       </button>
@@ -563,3 +571,4 @@ const BookVisit = () => {
 };
 
 export default BookVisit;
+

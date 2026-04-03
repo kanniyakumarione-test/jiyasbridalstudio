@@ -22,23 +22,36 @@ const buildBookingLink = (services) =>
     ? `/book-visit?services=${encodeURIComponent(services.map((s) => `${s.name} (${s.sectionTitle})`).join(', '))}`
     : '#';
 
-const CartModal = ({ cartCount, onClose, onRemove, selectedServices }) => (
-  <div className="fixed inset-0 z-[9999] bg-black/72 px-4 py-6 backdrop-blur-md" onClick={onClose}>
+const CartModal = ({ cartCount, onClose, onRemove, selectedServices, isDarkTheme }) => (
+  <div
+    className={`fixed inset-0 z-[9999] px-4 py-6 backdrop-blur-md ${
+      isDarkTheme ? 'bg-black/72' : 'bg-[rgba(63,42,21,0.18)]'
+    }`}
+    onClick={onClose}
+  >
     <div
-      className="mx-auto flex max-h-[calc(100vh-3rem)] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] border border-glass-border bg-[linear-gradient(180deg,rgba(24,21,17,0.98),rgba(12,10,8,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.6)]"
+      className={`mx-auto flex max-h-[calc(100vh-3rem)] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] border shadow-[0_28px_90px_rgba(0,0,0,0.6)] ${
+        isDarkTheme
+          ? 'border-glass-border bg-[linear-gradient(180deg,rgba(24,21,17,0.98),rgba(12,10,8,0.98))]'
+          : 'border-[rgba(170,123,62,0.18)] bg-[linear-gradient(180deg,rgba(255,251,245,0.98),rgba(245,236,224,0.97))] shadow-[0_28px_90px_rgba(138,97,42,0.18)]'
+      }`}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex items-start justify-between gap-4 border-b border-[rgba(214,177,111,0.14)] px-6 py-5 md:px-7">
+      <div className={`flex items-start justify-between gap-4 border-b px-6 py-5 md:px-7 ${isDarkTheme ? 'border-[rgba(214,177,111,0.14)]' : 'border-[rgba(170,123,62,0.12)]'}`}>
         <div>
           <div className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-accent">Selection Cart</div>
-          <h2 className="mt-2 font-heading text-3xl text-white">Your picked services</h2>
-          <p className="mt-2 text-sm leading-6 text-[#cfc2ad]">
+          <h2 className={`mt-2 font-heading text-3xl ${isDarkTheme ? 'text-white' : 'text-[#2c1d12]'}`}>Your picked services</h2>
+          <p className={`mt-2 text-sm leading-6 ${isDarkTheme ? 'text-[#cfc2ad]' : 'text-[#6e563f]'}`}>
             Review everything before moving into booking.
           </p>
         </div>
         <button
           type="button"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-glass-border bg-white/5 text-[#eadfc9] transition-all duration-300 hover:border-accent/40 hover:text-white"
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all duration-300 hover:border-accent/40 ${
+            isDarkTheme
+              ? 'border-glass-border bg-white/5 text-[#eadfc9] hover:text-white'
+              : 'border-[rgba(170,123,62,0.18)] bg-white/78 text-[#5b4128] hover:text-[#2c1d12]'
+          }`}
           onClick={onClose}
           aria-label="Close cart"
         >
@@ -48,19 +61,19 @@ const CartModal = ({ cartCount, onClose, onRemove, selectedServices }) => (
 
       {cartCount === 0 ? (
         <div className="px-6 py-12 text-center md:px-7">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-glass-border bg-accent/10 text-accent">
+          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full border text-accent ${isDarkTheme ? 'border-glass-border bg-accent/10' : 'border-[rgba(170,123,62,0.18)] bg-[rgba(214,177,111,0.12)]'}`}>
             <ShoppingCart className="h-7 w-7" />
           </div>
-          <div className="mt-5 font-heading text-3xl text-white">Cart is empty</div>
-          <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-[#cfc2ad]">
+          <div className={`mt-5 font-heading text-3xl ${isDarkTheme ? 'text-white' : 'text-[#2c1d12]'}`}>Cart is empty</div>
+          <p className={`mx-auto mt-3 max-w-sm text-sm leading-7 ${isDarkTheme ? 'text-[#cfc2ad]' : 'text-[#6e563f]'}`}>
             Add a few services from any category and they will appear here for quick booking.
           </p>
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-b border-[rgba(214,177,111,0.12)] px-6 py-4 md:px-7">
-            <div className="text-sm uppercase tracking-[0.22em] text-[#b8a98f]">Selected Items</div>
-            <div className="rounded-full border border-[rgba(214,177,111,0.2)] bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+          <div className={`flex items-center justify-between border-b px-6 py-4 md:px-7 ${isDarkTheme ? 'border-[rgba(214,177,111,0.12)]' : 'border-[rgba(170,123,62,0.12)]'}`}>
+            <div className={`text-sm uppercase tracking-[0.22em] ${isDarkTheme ? 'text-[#b8a98f]' : 'text-[#8a673f]'}`}>Selected Items</div>
+            <div className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-accent ${isDarkTheme ? 'border-[rgba(214,177,111,0.2)] bg-accent/10' : 'border-[rgba(170,123,62,0.18)] bg-[rgba(214,177,111,0.12)]'}`}>
               {cartCount} Total
             </div>
           </div>
@@ -69,17 +82,25 @@ const CartModal = ({ cartCount, onClose, onRemove, selectedServices }) => (
             {selectedServices.map((service) => (
               <li
                 key={`${service.name}-${service.sectionTitle}`}
-                className="mb-3 flex items-center justify-between gap-4 rounded-[1.4rem] border border-[rgba(214,177,111,0.12)] bg-white/[0.03] px-4 py-4 last:mb-0"
+                className={`mb-3 flex items-center justify-between gap-4 rounded-[1.4rem] border px-4 py-4 last:mb-0 ${
+                  isDarkTheme
+                    ? 'border-[rgba(214,177,111,0.12)] bg-white/[0.03]'
+                    : 'border-[rgba(170,123,62,0.12)] bg-[rgba(255,250,244,0.9)]'
+                }`}
               >
                 <div className="min-w-0">
-                  <div className="truncate text-lg font-semibold text-white">{service.name}</div>
+                  <div className={`truncate text-lg font-semibold ${isDarkTheme ? 'text-white' : 'text-[#332216]'}`}>{service.name}</div>
                   <div className="mt-1 text-xs font-semibold uppercase tracking-[0.22em] text-accent">
                     {service.sectionTitle}
                   </div>
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-full border border-red-400/25 bg-red-400/8 px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-red-300 transition-colors duration-300 hover:border-red-300/45 hover:text-red-100"
+                  className={`shrink-0 rounded-full border px-3 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-300 ${
+                    isDarkTheme
+                      ? 'border-red-400/25 bg-red-400/8 text-red-300 hover:border-red-300/45 hover:text-red-100'
+                      : 'border-[rgba(225,144,144,0.42)] bg-[rgba(245,214,214,0.55)] text-[#dd8f8f] hover:border-[rgba(214,118,118,0.5)] hover:text-[#c66d6d]'
+                  }`}
                   onClick={() => onRemove(service)}
                 >
                   Remove
@@ -90,12 +111,14 @@ const CartModal = ({ cartCount, onClose, onRemove, selectedServices }) => (
         </>
       )}
 
-      <div className="border-t border-[rgba(214,177,111,0.14)] bg-white/[0.02] px-6 py-5 md:px-7">
+      <div className={`border-t px-6 py-5 md:px-7 ${isDarkTheme ? 'border-[rgba(214,177,111,0.14)] bg-white/[0.02]' : 'border-[rgba(170,123,62,0.12)] bg-[rgba(255,252,247,0.72)]'}`}>
         <Link
           to={buildBookingLink(selectedServices)}
           className={`flex w-full items-center justify-center gap-3 rounded-full px-6 py-4 text-sm font-bold uppercase tracking-[0.22em] transition-all duration-300 ${
             cartCount === 0
-              ? 'pointer-events-none border border-glass-border bg-white/5 text-[#8e8068]'
+              ? isDarkTheme
+                ? 'pointer-events-none border border-glass-border bg-white/5 text-[#8e8068]'
+                : 'pointer-events-none border border-[rgba(170,123,62,0.14)] bg-[rgba(255,248,240,0.82)] text-[#bca58b]'
               : 'border border-accent bg-accent text-black hover:-translate-y-0.5 hover:bg-[#e2c88e]'
           }`}
           onClick={onClose}
@@ -399,7 +422,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>{cartOpen ? <CartModal cartCount={cartCount} onClose={() => setCartOpen(false)} onRemove={removeService} selectedServices={selectedServices} /> : null}</AnimatePresence>
+      <AnimatePresence>{cartOpen ? <CartModal cartCount={cartCount} onClose={() => setCartOpen(false)} onRemove={removeService} selectedServices={selectedServices} isDarkTheme={isDarkTheme} /> : null}</AnimatePresence>
     </>
   );
 };

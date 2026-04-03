@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { fadeInUp, staggerContainer } from '../lib/motion';
 import { loadHomeFeaturedLooks } from '../data/homeFeaturedLooks';
+import { usePerformanceProfile } from '../lib/performance';
 
 const Hero3D = lazy(() => import('../components/Hero3D'));
 
@@ -91,6 +92,7 @@ const marqueeItems = [
 const testimonialCarousel = [...testimonials, ...testimonials];
 const Home = ({ theme = 'dark' }) => {
   const [featuredLooks, setFeaturedLooks] = useState([]);
+  const performanceProfile = usePerformanceProfile();
 
   useEffect(() => {
     let cancelled = false;
@@ -104,30 +106,15 @@ const Home = ({ theme = 'dark' }) => {
 
     hydrateFeaturedLooks();
 
-    const handleWindowFocus = () => {
-      hydrateFeaturedLooks();
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        hydrateFeaturedLooks();
-      }
-    };
-
-    window.addEventListener('focus', handleWindowFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       cancelled = true;
-      window.removeEventListener('focus', handleWindowFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   return (
     <main className="relative overflow-hidden pt-28 md:pt-32 transition-colors duration-500">
       <Suspense fallback={null}>
-        <Hero3D theme={theme} />
+        {performanceProfile.allowHeavyEffects ? <Hero3D theme={theme} /> : null}
       </Suspense>
       <div
         className="pointer-events-none absolute inset-0 z-0"
@@ -232,7 +219,7 @@ const Home = ({ theme = 'dark' }) => {
 
       <section className="px-[5%] py-10">
         <div className="section-shell relative z-10 overflow-hidden px-0 py-5">
-          <div className="marquee-track">
+          <div className={`marquee-track ${performanceProfile.allowAmbientMotion ? '' : 'marquee-track-static'}`}>
             {[...marqueeItems, ...marqueeItems].map((item, index) => (
               <div key={`${item}-${index}`} className="marquee-pill">
                 <span className="marquee-dot" />
@@ -294,7 +281,7 @@ const Home = ({ theme = 'dark' }) => {
           </div>
 
           <div className="overflow-hidden px-0 py-2">
-            <div className="testimonial-track">
+            <div className={`testimonial-track ${performanceProfile.allowAmbientMotion ? '' : 'testimonial-track-static'}`}>
               {testimonialCarousel.map((item, index) => (
                 <div key={`${item.author}-${item.service}-${index}`} className="testimonial-card premium-card p-5 sm:p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">

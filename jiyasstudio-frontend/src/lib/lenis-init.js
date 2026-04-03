@@ -1,18 +1,15 @@
 // src/lib/lenis-init.js
 // Initializes Lenis smooth scroll for the whole website
 import Lenis from 'lenis';
+import { getPerformanceProfile } from './performance';
 
 export function initLenis() {
   if (typeof window === 'undefined') return;
   if (window.__lenisInitialized) return;
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
-  const lowPowerDevice =
-    (typeof navigator !== 'undefined' && navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
-    (typeof navigator !== 'undefined' && navigator.deviceMemory && navigator.deviceMemory <= 4);
+  const { prefersReducedMotion, isCoarsePointer, lowPowerDevice, saveDataEnabled, slowConnection } = getPerformanceProfile();
 
-  if (prefersReducedMotion || isTouchDevice || lowPowerDevice) {
+  if (prefersReducedMotion || isCoarsePointer || lowPowerDevice || saveDataEnabled || slowConnection) {
     return;
   }
 
@@ -32,9 +29,9 @@ export function initLenis() {
 
   function raf(time) {
     lenis.raf(time);
-    requestAnimationFrame(raf);
+    window.__lenisRaf = requestAnimationFrame(raf);
   }
-  requestAnimationFrame(raf);
+  window.__lenisRaf = requestAnimationFrame(raf);
 
   // Optional: Expose for debugging
   window.lenis = lenis;

@@ -67,6 +67,11 @@ html {
   scroll-behavior: smooth;
 }
 
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -165,7 +170,6 @@ a {
 
   .interactive-panel {
     @apply relative transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[rgba(214,177,111,0.34)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.55),0_0_28px_rgba(214,177,111,0.08)];
-    will-change: transform, opacity;
   }
 
   .interactive-panel::after {
@@ -305,7 +309,6 @@ a {
   }
 
   .page-shell {
-    will-change: transform, opacity, filter;
     backface-visibility: hidden;
     transform: translateZ(0);
   }
@@ -352,6 +355,51 @@ a {
   background: transparent;
   color: var(--text-primary);
   transition: background-color 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interactive-panel,
+  .page-shell {
+    will-change: transform, opacity;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .marquee-track,
+  .testimonial-track {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+.marquee-track-static,
+.testimonial-track-static {
+  animation: none !important;
+  transform: none !important;
+}
+
+.marquee-track-static {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.testimonial-track-static {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 }
 
 .theme-light .mix-blend-overlay {
@@ -864,6 +912,121 @@ a {
 .theme-light .service-row {
   background: rgba(255, 248, 239, 0.8) !important;
   border-color: rgba(166, 119, 68, 0.14) !important;
+}
+
+.theme-light .gallery-page .gallery-eyebrow,
+.theme-light .gallery-page .gallery-cover-label,
+.theme-light .gallery-page .gallery-tile-label {
+  color: rgba(162, 102, 38, 0.92) !important;
+}
+
+.theme-light .gallery-page .gallery-display-title,
+.theme-light .gallery-page .gallery-section-title,
+.theme-light .gallery-page .gallery-cover-title,
+.theme-light .gallery-page .gallery-tile-title {
+  color: #2a1b12 !important;
+}
+
+.theme-light .gallery-page .gallery-display-accent {
+  color: #a4672e !important;
+}
+
+.theme-light .gallery-page .gallery-lead-copy,
+.theme-light .gallery-page .gallery-cover-copy,
+.theme-light .gallery-page .gallery-hero-meta {
+  color: rgba(92, 68, 46, 0.9) !important;
+}
+
+.theme-light .gallery-page .gallery-image-tile-title {
+  color: rgba(47, 28, 17, 0.9) !important;
+  text-shadow: 0 1px 0 rgba(255, 248, 238, 0.38);
+}
+
+.theme-light .gallery-page .gallery-image-tile-label {
+  color: rgba(169, 108, 44, 0.92) !important;
+  text-shadow: 0 1px 0 rgba(255, 248, 238, 0.4);
+}
+
+.theme-light .gallery-page .gallery-tag {
+  background-color: rgba(255, 247, 236, 0.82) !important;
+  color: #5c4027 !important;
+  border-color: rgba(164, 105, 49, 0.22) !important;
+}
+
+.theme-light .gallery-page .gallery-hero-overlay {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 242, 0.08), rgba(255, 246, 235, 0.04) 46%, rgba(42, 27, 15, 0.34) 76%, rgba(30, 19, 11, 0.56));
+}
+
+.theme-light .gallery-page .gallery-tag.rounded-full.border.border-white\/15.px-3.py-2.text-\[0\.56rem\].font-bold.uppercase.tracking-\[0\.22em\].text-white\/85.backdrop-blur-md,
+.theme-light .gallery-page .gallery-tag.rounded-full.border.border-white\/10.px-3.py-2.text-\[0\.58rem\].font-bold.uppercase.tracking-\[0\.24em\].text-accent\/80.backdrop-blur-md {
+  color: #65452a !important;
+}
+
+.theme-light .services-page .services-offer-card {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.78), rgba(239, 229, 215, 0.88)) !important;
+  border-color: rgba(150, 109, 58, 0.15) !important;
+  box-shadow: 0 24px 48px rgba(167, 123, 67, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.28) inset;
+}
+
+.theme-light .services-page .services-offer-card .editorial-overlay-soft {
+  background:
+    radial-gradient(circle at center, rgba(255, 248, 238, 0.08), rgba(255, 248, 238, 0.02) 42%, rgba(50, 33, 18, 0.16) 100%) !important;
+}
+
+.theme-light .services-page .services-offer-card-overlay {
+  background:
+    linear-gradient(180deg, rgba(255, 251, 245, 0.22), rgba(255, 247, 238, 0.06) 34%, rgba(67, 48, 30, 0.34) 100%) !important;
+}
+
+.theme-light .services-page .services-offer-card img {
+  opacity: 0.12 !important;
+}
+
+.theme-light .services-page .services-offer-pill,
+.theme-light .services-page .services-offer-chip {
+  background: rgba(255, 248, 239, 0.9) !important;
+  border-color: rgba(160, 114, 58, 0.16) !important;
+}
+
+.theme-light .services-page .services-offer-pill {
+  color: #7d562e !important;
+}
+
+.theme-light .services-page .services-offer-title,
+.theme-light .services-page .services-offer-link {
+  color: #b07234 !important;
+}
+
+.theme-light .services-page .services-offer-copy {
+  color: rgba(88, 66, 44, 0.92) !important;
+}
+
+.theme-light .services-page .services-offer-chip {
+  color: rgba(72, 54, 36, 0.92) !important;
+}
+
+.theme-light .services-page .services-offer-strike {
+  background: rgba(233, 82, 82, 0.08) !important;
+  border-color: rgba(219, 90, 90, 0.22) !important;
+  color: rgba(178, 92, 92, 0.82) !important;
+}
+
+.theme-light .services-page .services-offer-price {
+  background: linear-gradient(135deg, #d89a49, #c8842a) !important;
+  color: #21150d !important;
+  box-shadow: 0 18px 30px rgba(200, 132, 42, 0.26) !important;
+}
+
+.theme-light .bookvisit-page .bookvisit-review-card,
+.theme-light .bookvisit-page .bookvisit-review-action {
+  background: rgba(255, 249, 241, 0.88) !important;
+  border-color: rgba(166, 119, 68, 0.14) !important;
+}
+
+.theme-light .bookvisit-page .bookvisit-review-value {
+  color: rgba(93, 73, 51, 0.94) !important;
 }
 
 .theme-light .testimonial-card {

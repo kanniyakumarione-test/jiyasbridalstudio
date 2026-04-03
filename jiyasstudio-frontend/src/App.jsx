@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { initLenis } from './lib/lenis-init';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -10,6 +9,7 @@ import Loader from './components/Loader';
 import PromoBanner from './components/PromoBanner';
 import { NotificationProvider } from './components/NotificationProvider';
 import Seo from './components/Seo';
+import { usePerformanceProfile } from './lib/performance';
 
 import './App.css';
 
@@ -33,6 +33,7 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const App = () => {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
+  const performanceProfile = usePerformanceProfile();
   const [theme, setTheme] = useState(() => {
     const storedTheme = window.localStorage.getItem('jiya-theme');
     if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
@@ -41,8 +42,8 @@ const App = () => {
 
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoaded(true), 900);
-    return () => clearTimeout(timer);
+    const readyFrame = window.requestAnimationFrame(() => setIsLoaded(true));
+    return () => window.cancelAnimationFrame(readyFrame);
   }, []);
 
   // Initialize Lenis smooth scroll once on mount
@@ -94,36 +95,34 @@ const App = () => {
   return (
     <NotificationProvider>
       <div className={`app-container ${isLoaded ? 'loaded' : ''} relative min-h-screen`}>
-        <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.04] mix-blend-overlay" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
-        <AnimatePresence mode="wait">
-          {!isLoaded && <Loader key="global-cinematic-loader" />}
-        </AnimatePresence>
+        {performanceProfile.allowHeavyEffects ? (
+          <div className="fixed inset-0 z-[9999] pointer-events-none opacity-[0.04] mix-blend-overlay" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
+        ) : null}
+        {!isLoaded && <Loader key="global-cinematic-loader" />}
         <Seo />
         <PromoBanner />
         
-        <BackgroundOrbs />
+        {performanceProfile.allowAmbientMotion ? <BackgroundOrbs /> : null}
         
         {!isAdminPath && (
           <Navbar theme={theme} onToggleTheme={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))} />
         )}
 
         <Suspense fallback={<RouteFallback />}>
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              <Route path="/" element={<Home theme={theme} />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/services/:slug" element={<ServiceCategory />} />
-              <Route path="/packages/:slug" element={<PackageDetail />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/wigs" element={<Wigs />} />
-              <Route path="/beauty-school" element={<BeautySchool />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/book-visit" element={<BookVisit />} />
-              <Route path="/student-voucher" element={<StudentVoucher />} />
-              <Route path="/admin" element={<AdminPanel />} />
-            </Routes>
-          </AnimatePresence>
+          <Routes location={location}>
+            <Route path="/" element={<Home theme={theme} />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/services/:slug" element={<ServiceCategory />} />
+            <Route path="/packages/:slug" element={<PackageDetail />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/wigs" element={<Wigs />} />
+            <Route path="/beauty-school" element={<BeautySchool />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/book-visit" element={<BookVisit />} />
+            <Route path="/student-voucher" element={<StudentVoucher />} />
+            <Route path="/admin" element={<AdminPanel />} />
+          </Routes>
         </Suspense>
 
         {!isAdminPath && <Footer />}
