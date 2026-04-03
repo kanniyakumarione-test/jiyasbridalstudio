@@ -38,6 +38,12 @@ const contactChannels = [
 const studioNotes = [
   { icon: CalendarClock, label: 'Studio Days', value: 'Sunday to Saturday' },
   { icon: Clock3, label: 'Opening Hours', value: '9:00 AM to 9:00 PM' },
+  { icon: Phone, label: 'Primary Call', value: siteConfig.phoneDisplay },
+  {
+    icon: Phone,
+    label: 'Extra Numbers',
+    value: siteConfig.phoneNumbers.slice(1).map((item) => `${item.label}: ${item.display}`).join(' • '),
+  },
   { icon: MapPin, label: 'Visit Style', value: 'Walk-ins possible, but premium services are best booked in advance' },
   { icon: AtSign, label: 'Instagram', value: siteConfig.instagramHandle },
 ];

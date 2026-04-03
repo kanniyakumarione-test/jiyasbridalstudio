@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, LogOut, WandSparkles, X } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, LogOut, WandSparkles, X } from 'lucide-react';
 import { allServiceSections } from '../data/servicesData';
 import { defaultGalleryMediaEntries } from '../data/galleryMedia';
 import { defaultHomeFeaturedLookEntries } from '../data/homeFeaturedLooks';
@@ -7,14 +7,150 @@ import { buildRemoteGalleryMediaFromEntries, getCategoryFromValue, getGalleryMed
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '../components/NotificationProvider';
 
+const CERTIFICATE_WIDTH = 1400;
+const CERTIFICATE_HEIGHT = 990;
+const CERTIFICATE_DURATION_OPTIONS = ['15 Days', '1 Month', '3 Months', '5 Months', '6 Months', '1 Year'];
+
+const getOrdinal = (day) => {
+  if (day > 3 && day < 21) return 'th';
+  switch (day % 10) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+};
+
+const formatCertificateDate = (dateString) => {
+  if (!dateString) return 'DATE OF ISSUE';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return 'DATE OF ISSUE';
+  const month = date.toLocaleString('en-IN', { month: 'long' });
+  const day = date.getDate();
+  return `${day}${getOrdinal(day)} ${month} ${date.getFullYear()}`.toUpperCase();
+};
+
+const CertificateSvg = ({ values, logoSrc, baseId = 'jiya-certificate' }) => {
+  const studentName = values.studentName?.trim() || 'STUDENT NAME';
+  const courseName = values.courseName?.trim() || 'PROFESSIONAL BEAUTY COURSE';
+  const duration = values.duration?.trim() || 'COURSE DURATION';
+  const certificateId = values.certificateId?.trim() || '20260001';
+  const grade = values.grade?.trim() || 'COMPLETED';
+  const issueDate = formatCertificateDate(values.issueDate);
+
+  return (
+    <svg
+      viewBox={`0 0 ${CERTIFICATE_WIDTH} ${CERTIFICATE_HEIGHT}`}
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Jiya Beauty School e-certificate"
+      style={{ display: 'block', width: '100%', height: 'auto', background: '#080808' }}
+    >
+      <defs>
+        <linearGradient id={`${baseId}-foil`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8A6E2F" />
+          <stop offset="25%" stopColor="#CBB279" />
+          <stop offset="50%" stopColor="#F4E7C2" />
+          <stop offset="75%" stopColor="#CBB279" />
+          <stop offset="100%" stopColor="#8A6E2F" />
+        </linearGradient>
+        <radialGradient id={`${baseId}-bg`} cx="50%" cy="28%" r="92%">
+          <stop offset="0%" stopColor="#1b1814" />
+          <stop offset="50%" stopColor="#0b0a08" />
+          <stop offset="100%" stopColor="#040404" />
+        </radialGradient>
+        <radialGradient id={`${baseId}-sealGlow`} cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stopColor="#F4E7C2" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#8A6E2F" stopOpacity="0.04" />
+        </radialGradient>
+      </defs>
+
+      <rect width={CERTIFICATE_WIDTH} height={CERTIFICATE_HEIGHT} fill={`url(#${baseId}-bg)`} />
+      <rect x="34" y="34" width="1332" height="922" rx="34" fill="none" stroke={`url(#${baseId}-foil)`} strokeWidth="2" opacity="0.95" />
+      <rect x="58" y="58" width="1284" height="874" rx="26" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+
+      <image href={logoSrc} x="120" y="86" width="136" height="136" preserveAspectRatio="xMidYMid meet" opacity="0.98" />
+
+      <g transform="translate(1230, 154)">
+        <circle cx="0" cy="0" r="68" fill={`url(#${baseId}-sealGlow)`} />
+        <circle cx="0" cy="0" r="58" fill="none" stroke={`url(#${baseId}-foil)`} strokeWidth="2" opacity="0.95" />
+        <circle cx="0" cy="0" r="46" fill="none" stroke="rgba(255,255,255,0.26)" strokeWidth="1.1" />
+        <text x="0" y="-7" fill={`url(#${baseId}-foil)`} fontFamily="Montserrat, sans-serif" fontSize="11" fontWeight="700" textAnchor="middle" letterSpacing="3">
+          GOVT.
+        </text>
+        <text x="0" y="11" fill={`url(#${baseId}-foil)`} fontFamily="Montserrat, sans-serif" fontSize="14" fontWeight="700" textAnchor="middle" letterSpacing="2.5">
+          CERTIFIED
+        </text>
+        <text x="0" y="29" fill="rgba(255,255,255,0.6)" fontFamily="Montserrat, sans-serif" fontSize="8" textAnchor="middle" letterSpacing="2.2">
+          JIYA SCHOOL
+        </text>
+      </g>
+
+      <text x="700" y="128" fill={`url(#${baseId}-foil)`} fontFamily="Montserrat, sans-serif" fontSize="18" textAnchor="middle" letterSpacing="11" fontWeight="700">
+        JIYA BEAUTY SCHOOL
+      </text>
+      <text x="700" y="238" fill="#F7F0E0" fontFamily="'Bodoni Moda', serif" fontSize="88" fontWeight="700" fontStyle="italic" textAnchor="middle">
+        Certificate of Completion
+      </text>
+      <text x="700" y="292" fill="rgba(255,255,255,0.66)" fontFamily="Montserrat, sans-serif" fontSize="20" textAnchor="middle" letterSpacing="4">
+        GOVERNMENT CERTIFIED TRAINING | CAREER-FOCUSED LEARNING
+      </text>
+
+      <text x="700" y="398" fill="rgba(255,255,255,0.62)" fontFamily="Montserrat, sans-serif" fontSize="18" textAnchor="middle" letterSpacing="6">
+        THIS IS TO CERTIFY THAT
+      </text>
+      <text x="700" y="492" fill={`url(#${baseId}-foil)`} fontFamily="'Bodoni Moda', serif" fontSize="72" fontWeight="700" textAnchor="middle">
+        {studentName}
+      </text>
+      <line x1="310" y1="522" x2="1090" y2="522" stroke={`url(#${baseId}-foil)`} strokeWidth="1.2" opacity="0.4" />
+
+      <text x="700" y="604" fill="rgba(255,255,255,0.76)" fontFamily="Montserrat, sans-serif" fontSize="24" textAnchor="middle" letterSpacing="2">
+        has successfully completed the
+      </text>
+      <text x="700" y="684" fill="#FFFFFF" fontFamily="'Bodoni Moda', serif" fontSize="52" fontWeight="600" textAnchor="middle">
+        {courseName}
+      </text>
+
+      <g transform="translate(180, 770)">
+        <text fill="rgba(255,255,255,0.44)" fontFamily="Montserrat, sans-serif" fontSize="14" letterSpacing="5">DURATION</text>
+        <text y="44" fill="#FFFFFF" fontFamily="'Bodoni Moda', serif" fontSize="34">{duration}</text>
+      </g>
+      <g transform="translate(700, 770)">
+        <text fill="rgba(255,255,255,0.44)" fontFamily="Montserrat, sans-serif" fontSize="14" letterSpacing="5" textAnchor="middle">GRADE / STATUS</text>
+        <text y="44" fill="#FFFFFF" fontFamily="'Bodoni Moda', serif" fontSize="34" textAnchor="middle">{grade}</text>
+      </g>
+      <g transform="translate(1220, 770)">
+        <text fill="rgba(255,255,255,0.44)" fontFamily="Montserrat, sans-serif" fontSize="14" letterSpacing="5" textAnchor="end">ISSUE DATE</text>
+        <text y="44" fill="#FFFFFF" fontFamily="'Bodoni Moda', serif" fontSize="34" textAnchor="end">{issueDate}</text>
+      </g>
+
+      <line x1="138" y1="838" x2="492" y2="838" stroke={`url(#${baseId}-foil)`} strokeWidth="1.1" opacity="0.55" />
+      <line x1="908" y1="838" x2="1262" y2="838" stroke={`url(#${baseId}-foil)`} strokeWidth="1.1" opacity="0.55" />
+      <text x="138" y="872" fill="rgba(255,255,255,0.52)" fontFamily="Montserrat, sans-serif" fontSize="13" letterSpacing="4">ACADEMY DIRECTOR</text>
+      <text x="138" y="908" fill={`url(#${baseId}-foil)`} fontFamily="'Bodoni Moda', serif" fontSize="30" fontStyle="italic">Jiya</text>
+      <text x="1262" y="872" fill="rgba(255,255,255,0.52)" fontFamily="Montserrat, sans-serif" fontSize="13" letterSpacing="4" textAnchor="end">CERTIFICATE ID</text>
+      <text x="1262" y="908" fill={`url(#${baseId}-foil)`} fontFamily="Montserrat, sans-serif" fontSize="20" fontWeight="700" letterSpacing="3" textAnchor="end">{certificateId}</text>
+
+      <text x="700" y="928" fill="rgba(255,255,255,0.28)" fontFamily="Montserrat, sans-serif" fontSize="12" textAnchor="middle" letterSpacing="4">
+        JIYA BEAUTY SCHOOL | E-CERTIFICATE | VERIFIED TRAINING RECORD
+      </text>
+    </svg>
+  );
+};
+
 export default function AdminPanel() {
   const { showToast, confirm } = useNotifications();
   const adminPanelTopRef = useRef(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
-  const [activeTab, setActiveTab] = useState('vouchers'); // 'vouchers', 'services', 'promotions', or 'media'
+  const [activeTab, setActiveTab] = useState('vouchers'); // 'vouchers', 'services', 'promotions', 'certificates', or 'media'
   
   // VOUCHER STATE
   const [students, setStudents] = useState([]);
@@ -24,6 +160,15 @@ export default function AdminPanel() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [formValues, setFormValues] = useState({ studentName: '', idCardNumber: '', contact: '' });
+  const [certificateForm, setCertificateForm] = useState({
+    studentName: '',
+    courseName: '',
+    duration: CERTIFICATE_DURATION_OPTIONS[0],
+    issueDate: new Date().toISOString().split('T')[0],
+    grade: 'Completed',
+  });
+  const [certificates, setCertificates] = useState([]);
+  const [certificateSearch, setCertificateSearch] = useState('');
   
   // SERVICE STATE
   const [services, setServices] = useState([]);
@@ -83,6 +228,19 @@ export default function AdminPanel() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLightTheme, setIsLightTheme] = useState(false);
+  const [certificateLogoDataUrl, setCertificateLogoDataUrl] = useState('/logo.png');
+  const certificatePreviewRef = useRef(null);
+  const generatedCertificateId = useMemo(() => {
+    const issueStamp = (certificateForm.issueDate || new Date().toISOString().split('T')[0]).replace(/-/g, '');
+    const source = `${certificateForm.studentName || ''}${certificateForm.courseName || ''}`;
+    const checksum = source
+      .split('')
+      .reduce((sum, char) => sum + char.charCodeAt(0), 0)
+      .toString()
+      .slice(-3)
+      .padStart(3, '0');
+    return `${issueStamp}${checksum}`;
+  }, [certificateForm.courseName, certificateForm.issueDate, certificateForm.studentName]);
 
   const scriptUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
   const adminUser = import.meta.env.VITE_ADMIN_USER;
@@ -113,6 +271,32 @@ export default function AdminPanel() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadLogo = async () => {
+      try {
+        const response = await fetch('/logo.png');
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (isMounted && typeof reader.result === 'string') {
+            setCertificateLogoDataUrl(reader.result);
+          }
+        };
+        reader.readAsDataURL(blob);
+      } catch (loadError) {
+        console.error('Certificate logo preload failed', loadError);
+      }
+    };
+
+    loadLogo();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleLogin = (e) => {
     e.preventDefault();
     if (loginForm.username === adminUser && loginForm.password === adminPass) {
@@ -129,6 +313,87 @@ export default function AdminPanel() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('jiya_admin_auth');
     showToast('You have been signed out of the admin panel.', { tone: 'info', title: 'Signed Out' });
+  };
+
+  const handleCertificateChange = (field, value) => {
+    setCertificateForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleCertificateReset = () => {
+    setCertificateForm({
+      studentName: '',
+      courseName: '',
+      duration: CERTIFICATE_DURATION_OPTIONS[0],
+      issueDate: new Date().toISOString().split('T')[0],
+      grade: 'Completed',
+    });
+  };
+
+  const handleCertificateDownload = async () => {
+    if (!certificatePreviewRef.current) return;
+
+    try {
+      if (scriptUrl) {
+        try {
+          await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'create',
+              entity: 'Certificates',
+              studentName: certificateForm.studentName,
+              courseName: certificateForm.courseName,
+              duration: certificateForm.duration,
+              certificateId: generatedCertificateId,
+              issueDate: certificateForm.issueDate,
+              grade: certificateForm.grade,
+            }),
+          });
+        } catch (saveError) {
+          console.error('Certificate record save failed', saveError);
+        }
+      }
+
+      const svgElement = certificatePreviewRef.current.querySelector('svg');
+      if (!svgElement) throw new Error('Certificate preview not found');
+
+      const svgString = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const image = new Image();
+
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = svgUrl;
+      });
+
+      const scale = 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = CERTIFICATE_WIDTH * scale;
+      canvas.height = CERTIFICATE_HEIGHT * scale;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context not available');
+
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#080808';
+      ctx.fillRect(0, 0, CERTIFICATE_WIDTH, CERTIFICATE_HEIGHT);
+      ctx.drawImage(image, 0, 0, CERTIFICATE_WIDTH, CERTIFICATE_HEIGHT);
+      URL.revokeObjectURL(svgUrl);
+
+      const downloadName = (certificateForm.studentName || 'student').replace(/\s+/g, '-').toUpperCase();
+      const link = document.createElement('a');
+      link.download = `JIYA-SCHOOL-CERTIFICATE-${downloadName}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('E-certificate downloaded successfully.', { tone: 'success', title: 'Certificate Ready' });
+    } catch (downloadError) {
+      console.error('Certificate download failed', downloadError);
+      showToast('Certificate download failed. Please try again.', { tone: 'error', title: 'Download Failed' });
+    }
   };
 
   const fetchStudents = async () => {
@@ -185,6 +450,52 @@ export default function AdminPanel() {
       setError('Error fetching promotions.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCertificates = async () => {
+    if (!scriptUrl) return;
+    try {
+      setLoading(true);
+      const resp = await fetch(`${scriptUrl}?entity=Certificates`);
+      const data = await resp.json();
+      if (data.status === 'success') {
+        setCertificates(data.data || []);
+        setError(null);
+      } else {
+        setError(data.message || 'Failed to fetch certificates.');
+      }
+    } catch (err) {
+      setError('Error fetching certificates.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCertificate = async (id) => {
+    if (!scriptUrl) return;
+    const confirmed = await confirm({
+      title: 'Delete certificate record?',
+      message: 'This certificate entry will be removed from the cloud registry.',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+      await fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id, entity: 'Certificates' }),
+      });
+      showToast('Certificate record deleted.', { tone: 'success', title: 'Deleted' });
+      await fetchCertificates();
+    } catch (deleteError) {
+      console.error('Certificate delete failed', deleteError);
+      setError('Failed to delete certificate.');
+      showToast('Failed to delete certificate.', { tone: 'error', title: 'Delete Failed' });
     }
   };
 
@@ -271,12 +582,14 @@ export default function AdminPanel() {
       fetchStudents();
       fetchServices();
       fetchPromotions();
+      fetchCertificates();
       fetchMediaLibrary();
       fetchHomepageFeaturedLooks();
       const interval = setInterval(() => {
         if (activeTab === 'vouchers') fetchStudents();
         else if (activeTab === 'services') fetchServices();
         else if (activeTab === 'promotions') fetchPromotions();
+        else if (activeTab === 'certificates') fetchCertificates();
         else {
           fetchMediaLibrary();
           fetchHomepageFeaturedLooks();
@@ -1497,14 +1810,29 @@ export default function AdminPanel() {
               />
             </div>
             <div>
-              <input
-                type="password"
-                required
-                placeholder="Password"
-                value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                className={`w-full border-b bg-transparent py-4 outline-none transition-all focus:border-[#CBB279] ${isLightTheme ? 'border-black/20 text-black placeholder:text-black/40' : 'border-white/10 text-white placeholder:text-white/30'}`}
-              />
+              <div className={`flex items-center gap-3 border-b ${isLightTheme ? 'border-black/20' : 'border-white/10'} focus-within:border-[#CBB279] transition-all`}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleLogin(e);
+                    }
+                  }}
+                  className={`w-full bg-transparent py-4 outline-none ${isLightTheme ? 'text-black placeholder:text-black/40' : 'text-white placeholder:text-white/30'}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className={`shrink-0 transition-colors ${isLightTheme ? 'text-black/50 hover:text-black' : 'text-white/45 hover:text-white'}`}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             {loginError && <p className="text-xs text-red-600 font-medium">{loginError}</p>}
             <button
@@ -1573,6 +1901,12 @@ export default function AdminPanel() {
                     className={`pb-4 text-xs uppercase tracking-[0.3em] transition-all ${activeTab === 'promotions' ? 'text-[#CBB279] border-b-2 border-[#CBB279]' : 'text-[#baa98e] opacity-50'}`}
                   >
                     Promotions
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('certificates')}
+                    className={`pb-4 text-xs uppercase tracking-[0.3em] transition-all ${activeTab === 'certificates' ? 'text-[#CBB279] border-b-2 border-[#CBB279]' : 'text-[#baa98e] opacity-50'}`}
+                  >
+                    Jiya School
                   </button>
                   <button 
                     onClick={() => setActiveTab('media')}
@@ -1963,6 +2297,181 @@ export default function AdminPanel() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                ) : activeTab === 'certificates' ? (
+                  <div className="space-y-10">
+                    <div className={`rounded-3xl border p-8 ${isLightTheme ? 'bg-[#fcfaf7] border-black/5' : 'bg-[#1e1a15]/40 border-white/5'}`}>
+                      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                        <div>
+                          <h4 className="text-sm uppercase tracking-widest text-[#CBB279]">Jiya School E-Certificate</h4>
+                          <p className={`mt-3 max-w-3xl text-sm leading-7 ${isLightTheme ? 'text-[#5f4a34]' : 'text-[#d6c9b4]'}`}>
+                            Enter student and course details to generate a downloadable e-certificate for Jiya Beauty School.
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={handleCertificateReset}
+                            className="rounded-full border border-[#CBB279]/25 px-5 py-3 text-[0.6rem] font-bold uppercase tracking-[0.24em] text-[#CBB279] transition-all hover:bg-[#CBB279]/10"
+                          >
+                            Reset
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCertificateDownload}
+                            className="rounded-full bg-[#CBB279] px-5 py-3 text-[0.6rem] font-bold uppercase tracking-[0.24em] text-black transition-all hover:bg-[#d6b167]"
+                          >
+                            Download E-Certificate
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-8 xl:grid-cols-[0.92fr_1.08fr]">
+                        <form className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          <div className="md:col-span-2">
+                            <label className="mb-2 block text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Student Name</label>
+                            <input
+                              type="text"
+                              value={certificateForm.studentName}
+                              onChange={(e) => handleCertificateChange('studentName', e.target.value)}
+                              placeholder="Student full name"
+                              className={`w-full border-b bg-transparent py-2 text-base font-light outline-none focus:border-[#CBB279] ${isLightTheme ? 'border-black/10' : 'border-white/10'}`}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="mb-2 block text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Course Name</label>
+                            <input
+                              type="text"
+                              value={certificateForm.courseName}
+                              onChange={(e) => handleCertificateChange('courseName', e.target.value)}
+                              placeholder="Professional Hair Dressing"
+                              className={`w-full border-b bg-transparent py-2 text-base font-light outline-none focus:border-[#CBB279] ${isLightTheme ? 'border-black/10' : 'border-white/10'}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Duration</label>
+                            <select
+                              value={certificateForm.duration}
+                              onChange={(e) => handleCertificateChange('duration', e.target.value)}
+                              className={`w-full border-b bg-transparent py-2 text-base font-light outline-none focus:border-[#CBB279] ${isLightTheme ? 'border-black/10 text-black' : 'border-white/10 text-white'}`}
+                            >
+                              {CERTIFICATE_DURATION_OPTIONS.map((option) => (
+                                <option key={option} value={option} className={isLightTheme ? 'bg-white text-black' : 'bg-[#120f0c] text-white'}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Certificate ID</label>
+                            <input
+                              type="text"
+                              value={generatedCertificateId}
+                              readOnly
+                              className={`w-full border-b bg-transparent py-2 text-base font-light outline-none ${isLightTheme ? 'border-black/10 text-black/70' : 'border-white/10 text-white/70'}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Issue Date</label>
+                            <input
+                              type="date"
+                              value={certificateForm.issueDate}
+                              onChange={(e) => handleCertificateChange('issueDate', e.target.value)}
+                              className={`w-full border-b bg-transparent py-2 text-base font-light outline-none focus:border-[#CBB279] ${isLightTheme ? 'border-black/10' : 'border-white/10'}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2 block text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Grade / Status</label>
+                            <input
+                              type="text"
+                              value={certificateForm.grade}
+                              onChange={(e) => handleCertificateChange('grade', e.target.value)}
+                              placeholder="Completed"
+                              className={`w-full border-b bg-transparent py-2 text-base font-light outline-none focus:border-[#CBB279] ${isLightTheme ? 'border-black/10' : 'border-white/10'}`}
+                            />
+                          </div>
+                        </form>
+
+                        <div>
+                          <div className="mb-4 text-[0.6rem] uppercase tracking-widest text-[#CBB279]">Certificate Preview</div>
+                          <div
+                            ref={certificatePreviewRef}
+                            className={`overflow-hidden rounded-[1.8rem] border p-3 ${isLightTheme ? 'border-black/8 bg-white/70' : 'border-white/6 bg-black/30'}`}
+                          >
+                            <CertificateSvg values={{ ...certificateForm, certificateId: generatedCertificateId }} logoSrc={certificateLogoDataUrl} baseId="jiya-school-preview" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <h3 className="text-xl italic" style={{ fontFamily: "'Bodoni Moda', serif" }}>Certificate Registry</h3>
+
+                        <div className="flex flex-1 max-w-xl w-full items-center gap-3">
+                          <input
+                            type="text"
+                            placeholder="Search by student, course, ID, or date..."
+                            value={certificateSearch}
+                            onChange={(e) => setCertificateSearch(e.target.value)}
+                            className={`flex-1 bg-transparent border-b py-1 text-xs outline-none transition-all focus:border-[#CBB279] ${isLightTheme ? 'border-black/10' : 'border-white/10'}`}
+                          />
+                          <button onClick={fetchCertificates} disabled={loading} className="text-[0.6rem] uppercase tracking-widest text-[#CBB279] hover:underline disabled:opacity-50">
+                            {loading ? 'Syncing...' : 'Sync Data'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-x-auto">
+                        <table className="w-full text-left text-sm whitespace-nowrap">
+                          <thead>
+                            <tr className="border-b border-[#CBB279]/10 text-[0.6rem] uppercase tracking-[0.2em] opacity-40">
+                              <th className="px-4 py-4 font-normal">Student Name</th>
+                              <th className="px-4 py-4 font-normal">Course</th>
+                              <th className="px-4 py-4 font-normal">Duration</th>
+                              <th className="px-4 py-4 font-normal">Certificate ID</th>
+                              <th className="px-4 py-4 font-normal">Issue Date</th>
+                              <th className="px-4 py-4 font-normal">Grade</th>
+                              <th className="px-4 py-4 font-normal">Created</th>
+                              <th className="px-4 py-4 font-normal text-right">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {certificates.length === 0 && !loading && !error && (
+                              <tr>
+                                <td colSpan="8" className="py-20 text-center text-sm font-light italic opacity-30">
+                                  No certificate records found in the cloud registry.
+                                </td>
+                              </tr>
+                            )}
+                            {certificates
+                              .filter((item) =>
+                                [item.studentName, item.courseName, item.duration, item.certificateId, item.issueDate, item.grade]
+                                  .some((value) => String(value || '').toLowerCase().includes(certificateSearch.toLowerCase()))
+                              )
+                              .map((item, idx) => (
+                                <tr key={item.id || idx} className="border-b border-[#CBB279]/5 hover:bg-white/[0.01] transition-all">
+                                  <td className="px-4 py-5 text-base" style={{ fontFamily: "'Bodoni Moda', serif" }}>{item.studentName || '-'}</td>
+                                  <td className="px-4 py-5">{item.courseName || '-'}</td>
+                                  <td className="px-4 py-5">{item.duration || '-'}</td>
+                                  <td className="px-4 py-5 font-mono text-[0.75rem] text-[#CBB279]">{item.certificateId || '-'}</td>
+                                  <td className="px-4 py-5 font-mono text-[0.75rem] opacity-65">{item.issueDate || '-'}</td>
+                                  <td className="px-4 py-5">{item.grade || '-'}</td>
+                                  <td className="px-4 py-5 text-[0.7rem] opacity-40">{item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'N/A'}</td>
+                                  <td className="px-4 py-5 text-right">
+                                    <button
+                                      onClick={() => handleDeleteCertificate(item.id)}
+                                      className="text-[0.6rem] uppercase tracking-widest text-red-500/70"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 ) : (

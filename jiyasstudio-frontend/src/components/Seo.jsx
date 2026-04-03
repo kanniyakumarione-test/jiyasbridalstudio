@@ -38,6 +38,11 @@ const routeMeta = {
     description:
       'Explore wig consultations, styling, maintenance, and fitting support at Jiya\'s Studio.',
   },
+  '/beauty-school': {
+    title: `Beauty School | ${siteConfig.shortName}`,
+    description:
+      'Explore beauty school courses from basic to professional level including hair, makeup, nail artistry, hair extensions, saree styling, certification, and placement support.',
+  },
   '/student-voucher': {
     title: `Student Voucher | ${siteConfig.shortName}`,
     description:

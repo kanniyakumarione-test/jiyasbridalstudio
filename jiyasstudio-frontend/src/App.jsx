@@ -14,11 +14,7 @@ import Seo from './components/Seo';
 import './App.css';
 
 const RouteFallback = () => (
-  <div className="min-h-[60vh] px-4 pt-32 sm:px-[5%]">
-    <div className="section-shell mx-auto max-w-5xl rounded-[2rem] p-8 text-sm uppercase tracking-[0.24em] text-[#d9c8a6]/78">
-      Loading page...
-    </div>
-  </div>
+  <Loader />
 );
 
 const Home = lazy(() => import('./pages/Home'));
@@ -30,6 +26,7 @@ const Gallery = lazy(() => import('./pages/Gallery'));
 const Contact = lazy(() => import('./pages/Contact'));
 const BookVisit = lazy(() => import('./pages/BookVisit'));
 const Wigs = lazy(() => import('./pages/Wigs'));
+const BeautySchool = lazy(() => import('./pages/BeautySchool'));
 const StudentVoucher = lazy(() => import('./pages/StudentVoucher'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 
@@ -120,6 +117,7 @@ const App = () => {
               <Route path="/packages/:slug" element={<PackageDetail />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/wigs" element={<Wigs />} />
+              <Route path="/beauty-school" element={<BeautySchool />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/book-visit" element={<BookVisit />} />
               <Route path="/student-voucher" element={<StudentVoucher />} />

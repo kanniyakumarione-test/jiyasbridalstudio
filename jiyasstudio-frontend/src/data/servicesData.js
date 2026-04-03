@@ -9,17 +9,51 @@ const consultationPrice = 'Consultation';
 
 export const wigServices = {
   title: 'Wig Studio',
-  note: 'Private wig consultations, fitting, styling, revamp support, and maintenance care for clients who want a confident, natural finish.',
+  note: 'Private support for wig services, consultations, extensions, and wig sales with personalised guidance on fit, finish, comfort, and maintenance.',
   image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80',
-  items: [
-    { name: 'Wig Consultation', price: consultationPrice },
-    { name: 'Wig Fitting and Finish Styling', price: consultationPrice },
-    { name: 'Wig Wash and Reset', price: consultationPrice },
-    { name: 'Wig Curling / Straightening', price: consultationPrice },
-    { name: 'Wig Cut Customisation', price: consultationPrice },
-    { name: 'Wig Colour Refresh', price: consultationPrice },
-    { name: 'Wig Repair and Revamp', price: consultationPrice },
-    { name: 'Hair Topper Guidance', price: consultationPrice },
+  categories: [
+    {
+      title: 'Services',
+      note: 'Core wig styling, revamp, reset, and maintenance support for a polished natural finish.',
+      items: [
+        { name: 'Wig Fitting and Finish Styling', price: consultationPrice },
+        { name: 'Wig Wash and Reset', price: consultationPrice },
+        { name: 'Wig Curling / Straightening', price: consultationPrice },
+        { name: 'Wig Cut Customisation', price: consultationPrice },
+        { name: 'Wig Colour Refresh', price: consultationPrice },
+        { name: 'Wig Repair and Revamp', price: consultationPrice },
+      ],
+    },
+    {
+      title: 'Consultation',
+      note: 'One-to-one guidance for choosing the right wig, topper, look direction, and upkeep plan.',
+      items: [
+        { name: 'Wig Consultation', price: consultationPrice },
+        { name: 'Hair Topper Guidance', price: consultationPrice },
+      ],
+    },
+    {
+      title: 'Extensions',
+      note: 'Extension guidance, blending, styling, and maintenance support based on hair type and finish goals.',
+      items: [
+        { name: 'Hair Extension Consultation', price: consultationPrice },
+        { name: 'Extension Colour Match and Blend', price: consultationPrice },
+        { name: 'Extension Fitting Guidance', price: consultationPrice },
+        { name: 'Clip-In Extension Styling', price: consultationPrice },
+        { name: 'Extension Wash and Reset', price: consultationPrice },
+        { name: 'Extension Curling / Straightening', price: consultationPrice },
+        { name: 'Extension Maintenance and Revamp', price: consultationPrice },
+      ],
+    },
+    {
+      title: 'Wig Sales',
+      note: 'Wigs are also available for sale. Pricing depends on hair type, length, density, and customisation, so contact the studio on WhatsApp or phone.',
+      items: [
+        { name: 'Ready-to-Wear Wigs', price: 'Contact on WhatsApp or Phone' },
+        { name: 'Customised Wigs', price: 'Contact on WhatsApp or Phone' },
+        { name: 'Premium Human Hair Wigs', price: 'Contact on WhatsApp or Phone' },
+      ],
+    },
   ],
 };
 

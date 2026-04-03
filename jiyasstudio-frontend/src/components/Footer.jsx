@@ -7,6 +7,7 @@ const quickLinks = [
   ['Home', '/'],
   ['About', '/about'],
   ['Services', '/services'],
+  ['Academy', '/beauty-school'],
   ['Wigs', '/wigs'],
   ['Gallery', '/gallery'],
   ['Contact', '/contact'],
@@ -101,7 +102,13 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-accent" />
-                  <span>{siteConfig.phoneDisplay}</span>
+                  <div className="flex flex-col gap-1">
+                    {siteConfig.phoneNumbers.map((item) => (
+                      <a key={item.label} href={item.href} className="transition-colors duration-300 hover:text-accent">
+                        {item.label}: {item.display}
+                      </a>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <CalendarClock className="h-4 w-4 text-accent" />
